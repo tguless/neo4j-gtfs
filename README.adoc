@@ -38,6 +38,12 @@ On a Mac, just type:
 $ brew install neo4j
 ----
 
+Also on a mac, make sure the Neo4j imports folder has proper write permissions.
+This should take care of it:
+----
+chmod g+w /usr/local/Cellar/neo4j/3.1.4/libexec/import/nmbs/
+----
+
 For other options, visit https://neo4j.com/download/community-edition/
 
 Once you installed, launch it with it's default settings:

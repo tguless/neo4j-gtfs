@@ -40,37 +40,74 @@ public class NjTransitGtfsService {
     @Value("${njgtfs.password}")
     private String password;
     @Value("${neo4j.import.path}")
-    private String foldername;
-
+    private String neoimportpath;
+    @Value("${njgtfs.filename}")
+    private String zipfilename;
+    @Value("${app.debug}")
     boolean debug = false;
+    @Value("${app.wait.ms.between.login.page.and.login}")
+    long waitMsBetweenLoginPageAndLogin;
+    @Value("${app.wait.ms.between.login.post.and.download}")
+    long waitMsBetweenLoginPostAndDownload;
+
+    @Value("${njgtfs.download.link}")
+    String downloadLink;
+    @Value("${njgtfs.login.post.link}")
+    String loginPostLink;
+    @Value("${njgtfs.login.page.link}")
+    String loginPageLink;
 
     private final static Logger log = LoggerFactory.getLogger(NjTransitGtfsService.class);
 
-
     public Boolean grabGtfs() {
         if (!downloadtGtfs()) return false;
-        if (!unzipFile(foldername)) return false;
+        if (!unzipFile(neoimportpath, zipfilename)) return false;
         return true;
     }
 
     public Boolean downloadtGtfs() {
-        String urlStr = "https://www.njtransit.com/mt/mt_servlet.srv?hdnPageAction=MTDevResourceDownloadTo&Category=rail";
-        NjTransitCookie cookies = login();
+
+        NjTransitCookie cookies =  getLoginPage(new NjTransitCookie());
 
         if (cookies == null) {
+            log.error("Cookies were not set when requesting the login page. Aborting.");
             return false;
+        } else  {
+            log.info("We got proper cookies when we requested the login page");
         }
 
         try {
-            Thread.sleep(3000);
+            Thread.sleep(waitMsBetweenLoginPageAndLogin);
+        } catch (InterruptedException e) {
+            log.info("We received an interrupt while getting ready to post to the login page", e);
+            return false;
+        }
+
+        if (login(cookies) == null || cookies.JSESSIONID == null || cookies.JSESSIONID.trim().equals("")) {
+            log.error("Cookies were not set after we posted credentials to the login page. Aborting.");
+            return false;
+        } else {
+            log.info("Logged in successfully");
+        }
+
+
+        try {
+            Thread.sleep(waitMsBetweenLoginPostAndDownload);
         } catch (InterruptedException e) {
             log.info("We received an interrupt while getting ready to download the gtfs file", e);
             return false;
         }
 
+        return requestGtfsDownload(cookies);
+
+    }
+
+    public Boolean requestGtfsDownload(NjTransitCookie cookies) {
+
         int READ_TIMEOUT = 10000;
         String  POST_METHOD = "GET";
-        String data = "cacheType=1";
+
+        String urlStr = downloadLink;
 
         String cookiesStr;
         try {
@@ -90,36 +127,38 @@ public class NjTransitGtfsService {
 
             if (responseCode != HttpURLConnection.HTTP_OK) {
                 log.error("The download link seems to be broken with a response code " + responseCode);
-                return null;
+                return false;
             }
 
-            downloadFile(urlStr, "./", connection );
+            if (!downloadFile(urlStr, "./", connection, zipfilename, debug )) return false;
 
 
         } catch (Exception e ) {
-            e.printStackTrace();
+            log.error("Something happened while trying to download the zip file.", e);
+            return false;
         }
 
-        return true;
 
+        log.info("We successfully issued the request and received the GTFS file download.");
+        return true;
     }
 
-    private static boolean unzipFile(String foldername) {
+    private static boolean unzipFile(String unzippath, String zipfilename) {
 
         File newFile = null;
 
         try {
-            String fileZip = foldername + ".zip";
-            new File("./rail_data").mkdirs();
+
+            new File(unzippath).mkdirs();
             byte[] buffer = new byte[1024];
             ZipInputStream zis = null;
 
-            zis = new ZipInputStream(new FileInputStream(fileZip));
+            zis = new ZipInputStream(new FileInputStream(zipfilename));
 
             ZipEntry zipEntry = zis.getNextEntry();
             while (zipEntry != null) {
                 String fileName = zipEntry.getName();
-                newFile = new File(foldername + "/" + fileName);
+                newFile = new File(unzippath + "/" + fileName);
                 FileOutputStream fos = new FileOutputStream(newFile);
                 int len;
                 while ((len = zis.read(buffer)) > 0) {
@@ -143,67 +182,76 @@ public class NjTransitGtfsService {
 
     }
 
-    private String getCookieStr(NjTransitCookie cookies) throws UnsupportedEncodingException {
+    private String getCookieStr(NjTransitCookie cookies)  {
         String cookiesStr = new String();
+        try {
 
-        if (!StringUtils.isEmpty(cookies.JSESSIONID)) {
-            cookiesStr = cookiesStr + "JSESSIONID=" + URLEncoder.encode(cookies.JSESSIONID, "UTF-8");
-        }
 
-        if (!StringUtils.isEmpty(cookies.__utmz)) {
-            cookiesStr = cookiesStr + "; __utmz=" + cookies.__utmz;
-        }
+            if (!StringUtils.isEmpty(cookies.JSESSIONID)) {
+                cookiesStr = cookiesStr + "JSESSIONID=" + URLEncoder.encode(cookies.JSESSIONID, "UTF-8");
+            }
 
-        if (!StringUtils.isEmpty(cookies.__utma)) {
-            cookiesStr = cookiesStr + "; __utma=" + cookies.__utma;
-        }
+            if (!StringUtils.isEmpty(cookies.__utmz)) {
+                cookiesStr = cookiesStr + "; __utmz=" + cookies.__utmz;
+            }
 
-        if (!StringUtils.isEmpty(cookies.__utmc)) {
-            cookiesStr = cookiesStr + "; __utmc=" + cookies.__utmc;
-        }
+            if (!StringUtils.isEmpty(cookies.__utma)) {
+                cookiesStr = cookiesStr + "; __utma=" + cookies.__utma;
+            }
 
-        if (!StringUtils.isEmpty(cookies.__utmb)) {
-            cookiesStr = cookiesStr + "; __utmb=" + cookies.__utmb;
-        }
-        return cookiesStr;
-    }
+            if (!StringUtils.isEmpty(cookies.__utmc)) {
+                cookiesStr = cookiesStr + "; __utmc=" + cookies.__utmc;
+            }
 
-    private NjTransitCookie getLoginPage() throws IOException {
-        String urlStr = "https://www.njtransit.com/mt/mt_servlet.srv?hdnPageAction=MTDevLoginTo";
-        NjTransitCookie result = new NjTransitCookie();
-        int READ_TIMEOUT = 10000;
-        String  POST_METHOD = "GET";
-
-        URL url = new URL(urlStr);
-        HttpURLConnection connection = (HttpURLConnection)
-                url.openConnection();
-
-        connection.setReadTimeout(READ_TIMEOUT);
-        connection.setRequestMethod(POST_METHOD);
-        connection.setDoOutput(true);
-
-        int responseCode = connection.getResponseCode();
-        if (responseCode != HttpURLConnection.HTTP_OK) {
-            log.error("Login page failed to load with response code " + responseCode);
+            if (!StringUtils.isEmpty(cookies.__utmb)) {
+                cookiesStr = cookiesStr + "; __utmb=" + cookies.__utmb;
+            }
+        } catch(UnsupportedEncodingException e ) {
+            log.error("Error stringifying the cookie", e);
             return null;
         }
 
-        result.JSESSIONID = getCookie(connection, "JSESSIONID");
-        result.__utmz = getCookie(connection, "__utmz");
-        result.__utma = getCookie(connection, "__utma");
-        result.__utmc = getCookie(connection, "__utmc");
-        result.__utmb = getCookie(connection, "__utmb");
-
-        return result;
+        return cookiesStr;
     }
 
-    private NjTransitCookie login() {
-        String urlStr = "https://www.njtransit.com/mt/mt_servlet.srv?hdnPageAction=MTDevLoginSubmitTo";
+    private NjTransitCookie getLoginPage(NjTransitCookie result)  {
+        try {
+            String urlStr = loginPageLink;
+
+            int READ_TIMEOUT = 10000;
+            String POST_METHOD = "GET";
+
+            URL url = new URL(urlStr);
+            HttpURLConnection connection = (HttpURLConnection)
+                    url.openConnection();
+
+            connection.setReadTimeout(READ_TIMEOUT);
+            connection.setRequestMethod(POST_METHOD);
+            connection.setDoOutput(true);
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode != HttpURLConnection.HTTP_OK) {
+                log.error("Login page failed to load with response code " + responseCode);
+                return null;
+            }
+
+            result.JSESSIONID = getCookie(connection, "JSESSIONID");
+            result.__utmz = getCookie(connection, "__utmz");
+            result.__utma = getCookie(connection, "__utma");
+            result.__utmc = getCookie(connection, "__utmc");
+            result.__utmb = getCookie(connection, "__utmb");
+
+            return result;
+        } catch (IOException e) {
+            log.error("There was a problem getting the login page", e);
+            return null;
+        }
+    }
+
+    private NjTransitCookie login(NjTransitCookie cookie) {
+        String urlStr = loginPostLink;
         int READ_TIMEOUT = 10000;
         String  POST_METHOD = "POST";
-        //String jSessionId = "";
-
-        NjTransitCookie result = new NjTransitCookie();
 
         String data = "userName="+userName+"&password="+ password;
 
@@ -212,15 +260,7 @@ public class NjTransitGtfsService {
             HttpURLConnection connection = (HttpURLConnection)
                     url.openConnection();
 
-            NjTransitCookie cookies = getLoginPage();
-
-            if (cookies == null) {
-                return null;
-            }
-
-            String cookiesStr = getCookieStr(cookies);
-
-            connection.setRequestProperty("Cookie", cookiesStr);
+            connection.setRequestProperty("Cookie", getCookieStr(cookie));
             connection.setRequestProperty("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
             //connection.setRequestProperty("Accept-Encoding","gzip, deflate, br");
             connection.setRequestProperty("Accept-Language","en-US,en;q=0.8");
@@ -248,20 +288,22 @@ public class NjTransitGtfsService {
                 return null;
             }
 
-            result.JSESSIONID = getCookie(connection, "JSESSIONID");
-            result.__utmz = getCookie(connection, "__utmz");
-            result.__utma = getCookie(connection, "__utma");
-            result.__utmc = getCookie(connection, "__utmc");
-            result.__utmb = getCookie(connection, "__utmb");
+            cookie.JSESSIONID = getCookie(connection, "JSESSIONID");
+            cookie.__utmz = getCookie(connection, "__utmz");
+            cookie.__utma = getCookie(connection, "__utma");
+            cookie.__utmc = getCookie(connection, "__utmc");
+            cookie.__utmb = getCookie(connection, "__utmb");
 
             if (debug) {
-                downloadFile(urlStr, "./", connection);
+                downloadFile(urlStr, "./", connection, null, debug);
             }
 
         } catch (Exception e ) {
-            e.printStackTrace();
+            log.error("There was an issue posting credentials into the login page. ", e);
+            return null;
+
         }
-        return result;
+        return cookie;
     }
 
     private String getCookie(HttpURLConnection conn, String cookieName) {
@@ -282,7 +324,7 @@ public class NjTransitGtfsService {
 
                 for (String headerValue : headerFieldValue) {
 
-                    System.out.println("Cookie Found...");
+                    log.info("Cookie Found : " + cookieName);
 
                     String[] fields = headerValue.split(";\\s*");
 
@@ -324,10 +366,9 @@ public class NjTransitGtfsService {
     }
 
 
-    public static void downloadFile(String fileURL, String saveDir, HttpURLConnection httpConn )
+    public static boolean downloadFile(String fileURL, String saveDir, HttpURLConnection httpConn, String expectedFilename, boolean debug)
             throws IOException {
-        //URL url = new URL(fileURL);
-        //HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
+
         int responseCode = httpConn.getResponseCode();
 
         // always check HTTP response code first
@@ -348,6 +389,15 @@ public class NjTransitGtfsService {
                 // extracts file name from URL
                 fileName = fileURL.substring(fileURL.lastIndexOf("/") + 1,
                         fileURL.length());
+            }
+
+            if ( expectedFilename != null && !fileName.equals(expectedFilename)) {
+                log.error("The download filename is not matching what we were expecting. Something is wrong.");
+                log.error("The filename requested to be downloaded is " + expectedFilename);
+                log.error("The filname we got instead is " +  fileName);
+                if (!debug) {
+                    return false;
+                }
             }
 
             System.out.println("Content-Type = " + contentType);
@@ -372,9 +422,12 @@ public class NjTransitGtfsService {
             inputStream.close();
 
             log.info("File downloaded");
+
+            return true;
         } else {
             log.error("No file to download. Server replied HTTP code: " + responseCode);
         }
         httpConn.disconnect();
+        return true;
     }
 }
