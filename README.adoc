@@ -6,7 +6,16 @@ projects: [spring-data-neo4j]
 :icons: font
 :source-highlighter: prettify
 :project_id: neo4j-gtfs
-This project imports GTFS data from NJTransit in Neo4j and provides web services to interact with the data
+
+== Java General Transit Feed Specification (GTFS) Neo4j Importer
+
+This project imports General Transit Feed Specification (GTFS) data from NJTransit into Neo4j and provides web services to interact with the data.
+
+You need an account as an NJ transit developer.
+You can sign up here:
+----
+https://www.njtransit.com/mt/mt_servlet.srv?hdnPageAction=MTDevLoginTo
+----
 
 == What you'll build
 
