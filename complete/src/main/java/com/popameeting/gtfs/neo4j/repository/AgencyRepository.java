@@ -1,8 +1,6 @@
 package com.popameeting.gtfs.neo4j.repository;
 
 import com.popameeting.gtfs.neo4j.entity.Agency;
-
-import org.springframework.context.annotation.Import;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.GraphRepository;
 

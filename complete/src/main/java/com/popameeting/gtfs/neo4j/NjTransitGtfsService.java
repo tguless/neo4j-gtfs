@@ -39,7 +39,7 @@ public class NjTransitGtfsService {
     private String userName;
     @Value("${njgtfs.password}")
     private String password;
-    @Value("${njgtfs.password}")
+    @Value("${neo4j.import.path}")
     private String foldername;
 
     boolean debug = false;
@@ -62,7 +62,7 @@ public class NjTransitGtfsService {
         }
 
         try {
-            Thread.sleep(2000);
+            Thread.sleep(3000);
         } catch (InterruptedException e) {
             log.info("We received an interrupt while getting ready to download the gtfs file", e);
             return false;
