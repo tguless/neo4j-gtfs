@@ -17,7 +17,7 @@ You can sign up here:
 https://www.njtransit.com/mt/mt_servlet.srv?hdnPageAction=MTDevLoginTo
 ----
 
-This project is largely derived off the work that was done by Rick Van Bruggen:
+This project is largely derived off the work that was done by Rick Van Bruggen (github account rvanbruggen):
 ----
 http://blog.bruggen.com/p/about-author.html
 ----
