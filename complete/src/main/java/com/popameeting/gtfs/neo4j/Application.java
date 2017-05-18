@@ -14,21 +14,6 @@ import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 @SpringBootApplication
 @EnableNeo4jRepositories
 public class Application {
-    @Autowired
-    AgencyRepository agencyRepository;
-
-    @Autowired
-    RouteRepository routeRepository;
-
-    @Autowired
-    StopRepository stopRepository;
-
-    @Autowired
-    StoptimeRepository stoptimeRepository;
-
-    @Autowired
-    TripRepository tripRepository;
-
 
     private final static Logger log = LoggerFactory.getLogger(Application.class);
 

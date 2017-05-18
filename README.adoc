@@ -17,6 +17,21 @@ You can sign up here:
 https://www.njtransit.com/mt/mt_servlet.srv?hdnPageAction=MTDevLoginTo
 ----
 
+This project is largely derived off the work that was done by Rick Van Bruggen:
+----
+http://blog.bruggen.com/p/about-author.html
+----
+
+Loading the data is based off his blog entry "Loading General Transport Feed Spec (GTFS) files into Neo4j - part 1/2":
+----
+http://blog.bruggen.com/2015/11/loading-general-transport-feed-spec.html
+----
+
+Querying the data is based off his blog entry "Querying GTFS data - using Neo4j 2.3 - part 2/2":
+----
+http://blog.bruggen.com/2015/11/querying-gtfs-data-using-neo4j-23-part.html
+----
+
 == What you'll build
 
 You'll use Neo4j's link:/understanding/NoSQL[NoSQL] graph-based data store to build an embedded Neo4j server, store entities and relationships, and develop queries.
