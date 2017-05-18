@@ -39,6 +39,8 @@ public class NjTransitGtfsService {
     private String userName;
     @Value("${njgtfs.password}")
     private String password;
+    @Value("${njgtfs.password}")
+    private String foldername;
 
     boolean debug = false;
 
@@ -47,7 +49,7 @@ public class NjTransitGtfsService {
 
     public Boolean grabGtfs() {
         if (!downloadtGtfs()) return false;
-        if (!unzipFile()) return false;
+        if (!unzipFile(foldername)) return false;
         return true;
     }
 
@@ -102,13 +104,12 @@ public class NjTransitGtfsService {
 
     }
 
-    private static boolean unzipFile() {
-        String foldername = "rail_data";
+    private static boolean unzipFile(String foldername) {
 
         File newFile = null;
 
         try {
-            String fileZip = "./" + foldername + ".zip";
+            String fileZip = foldername + ".zip";
             new File("./rail_data").mkdirs();
             byte[] buffer = new byte[1024];
             ZipInputStream zis = null;

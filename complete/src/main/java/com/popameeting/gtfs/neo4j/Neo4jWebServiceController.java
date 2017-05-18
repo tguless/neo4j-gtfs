@@ -1,6 +1,5 @@
 package com.popameeting.gtfs.neo4j;
 
-
 import com.popameeting.gtfs.neo4j.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -8,8 +7,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-
 
 /**
  * Created by tgulesserian on 5/18/17.

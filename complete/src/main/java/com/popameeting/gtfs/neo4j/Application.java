@@ -1,7 +1,5 @@
 package com.popameeting.gtfs.neo4j;
 
-
-
 import com.popameeting.gtfs.neo4j.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
