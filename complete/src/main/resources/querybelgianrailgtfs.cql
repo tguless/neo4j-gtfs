@@ -3,19 +3,19 @@
 //http://docs.spring.io/spring-data/neo4j/docs/current/reference/html/
 
 //Find ANTWERP
-match (s:Stop)
-where upper(s.name) starts with "ANTW"
-return s
+MATCH (s:Stop)
+WHERE upper(s.name) STARTS WITH "ANTW"
+RETURN s
 
 //Find Turnhout part 1
-match (s:Stop)
-where s.name starts with "Turn"
-return s
+MATCH (s:Stop)
+WHERE s.name STARTS WITH "Turn"
+RETURN s
 
 //Find Turnhout part 2
-match (s:Stop)
-where upper(s.name) starts with "TURN"
-return s
+MATCH (s:Stop)
+WHERE upper(s.name) STARTS WITH "TURN"
+RETURN s
 
 //Find Antwerp and Turnhout
 // match (s:Stop)
@@ -23,10 +23,10 @@ return s
 // or s.name starts with "Turn"
 // return s;
 
-match (ant:Stop), (tu:Stop)
-where ant.name starts with "Antw"
-AND tu.name starts with "Turn"
-return distinct tu,ant;
+MATCH (ant:Stop), (tu:Stop)
+WHERE ant.name START WITH "Antw"
+AND tu.name STARTS WITH "Turn"
+RETURN DISTINCT tu,ant;
 
 // match (ant:Stop)
 // where ant.name starts with "Antw"
@@ -37,71 +37,117 @@ return distinct tu,ant;
 // return tu.name as name;
 
 //find the links between the top-level stops
-match (t:Stop)<-[:PART_OF]-(:Stop),
-(a:Stop)<-[:PART_OF]-(:Stop)
-where t.name starts with "Turn"
-AND a.name="Antwerpen-Centraal"
-with t,a
-match p = allshortestpaths((t)-[*]-(a))
-return p
-limit 10;
+MATCH
+    (t:Stop)<-[:PART_OF]-(:Stop),
+    (a:Stop)<-[:PART_OF]-(:Stop)
+WHERE
+    t.name starts with "Turn"
+AND
+    a.name="Antwerpen-Centraal"
+with
+    t,a
+MATCH
+    p = allshortestpaths((t)-[*]-(a))
+RETURN
+    p
+LIMIT
+    10;
 
-match (t:Stop),(a:Stop)
-where t.name starts with "Turn"
-AND a.name="Antwerpen-Centraal"
-with t,a
-match p = allshortestpaths((t)-[*]-(a))
-return p
-limit 10
+MATCH
+    (t:Stop),(a:Stop)
+WHERE
+    t.name starts with "Turn"
+    AND a.name="Antwerpen-Centraal"
+WITH
+    t,a
+MATCH
+    p = allshortestpaths((t)-[*]-(a))
+RETURN
+    p
+LIMIT
+    10
 
 
 //range queries with and without indexes
-match (st:Stoptime)
-where st.departure_time < "07:45:00"
-return st.departure_time;
+MATCH (st:Stoptime)
+WHERE st.departure_time < "07:45:00"
+RETURN st.departure_time;
+
+MATCH
+  (orig:Stop {name: "WESTWOOD"})--(orig_st:Stoptime)-[r1:PART_OF_TRIP]->(trp:Trip)
+  WHERE
+  orig_st.departure_time > "07:00:00"
+  AND orig_st.departure_time < "09:00:00"
+  AND trp.service_id="4"
+return orig, orig_st
 
 //find a DIRECT route with range conditions
-match (tu:Stop {name: "Turnhout"})--(tu_st:Stoptime)
-where tu_st.departure_time > "07:00:00"
-AND tu_st.departure_time < "09:00:00"
-with tu, tu_st
-match (ant:Stop {name:"Antwerpen-Centraal"})--(ant_st:Stoptime)
-where ant_st.arrival_time < "09:00:00"
-AND ant_st.arrival_time > "07:00:00"
-and ant_st.arrival_time > tu_st.departure_time
-with ant,ant_st,tu, tu_st
-match p = allshortestpaths((tu_st)-[*]->(ant_st))
-with nodes(p) as n
-unwind n as nodes
-match (nodes)-[r]-()
-return nodes,r
+MATCH
+  (orig:Stop {name: "WESTWOOD"})--(orig_st:Stoptime)-[r1:PART_OF_TRIP]->(trp:Trip)
+WHERE
+  orig_st.departure_time > "06:30:00"
+  AND orig_st.departure_time < "07:10:00"
+  AND trp.service_id="4"
+WITH
+  orig, orig_st
+MATCH
+    (dest:Stop {name:"HOBOKEN"})--(dest_st:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip)
+WHERE
+    dest_st.arrival_time < "08:00:00"
+    AND dest_st.arrival_time > "07:00:00"
+    AND dest_st.arrival_time > orig_st.departure_time
+    AND trp2.service_id="4"
+WITH
+    dest,dest_st,orig, orig_st
+MATCH
+    p = allshortestpaths((orig_st)-[*]->(dest_st))
+WITH
+    nodes(p) as n
+UNWIND
+    n as nodes
+MATCH
+    (nodes)-[r:PRECEDES]->(),
+    (nodes)-[loc:LOCATED_AT]->(stp:Stop)
+RETURN
+    nodes,r,loc,stp
+ORDER BY stp.arrival_time_int
 
 //Indirect routes
 
 //find the route and the stops for the indirect route
-match (t:Stop),(a:Stop)
-where t.name = "Turnhout"
-AND a.name="Arlon"
-with t,a
-match p = allshortestpaths((t)-[*]-(a))
-where NONE (x in relationships(p) where type(x)="OPERATES")
-return p
-limit 10
+MATCH
+    (t:Stop),(a:Stop)
+WHERE
+    t.name = "WESTWOOD"
+AND
+    a.name="HOBOKEN"
+WITH
+    t,a
+MATCH
+    p = allshortestpaths((t)-[*]-(a))
+WHERE
+    NONE (x in relationships(p) where type(x)="OPERATES")
+RETURN
+    p
+LIMIT
+    10
 
 //plan a specific indirect route
-MATCH (tu:Stop {name:"Turnhout"})--(st_tu:Stoptime),
-(ar:Stop {name:"Arlon"})--(st_ar:Stoptime),
-p1=((st_tu)-[:PRECEDES*]->(st_midway_arr:Stoptime)),
-(st_midway_arr)--(midway:Stop),
-(midway)--(st_midway_dep:Stoptime),
-p2=((st_midway_dep)-[:PRECEDES*]->(st_ar))
+MATCH 
+    (orig:Stop {name:"WESTWOOD"})--(st_orig:Stoptime),
+    (dest:Stop {name:"HOBOKEN"})--(st_dest:Stoptime),
+    p1=((st_orig)-[:PRECEDES*]->(st_midway_arr:Stoptime)),
+    (st_midway_arr)--(midway:Stop),
+    (midway)--(st_midway_dep:Stoptime),
+    p2=((st_midway_dep)-[:PRECEDES*]->(st_dest))
 WHERE
-st_tu.departure_time > "08:00:00"
-AND st_tu.departure_time < "11:00:00"
-AND st_midway_arr.arrival_time > st_tu.departure_time
-AND st_midway_dep.departure_time > st_midway_arr.arrival_time
-AND st_ar.arrival_time > st_midway_dep.departure_time
+    st_orig.departure_time > "08:00:00"
+    AND st_orig.departure_time < "11:00:00"
+    AND st_midway_arr.arrival_time > st_orig.departure_time
+    AND st_midway_dep.departure_time > st_midway_arr.arrival_time
+    AND st_dest.arrival_time > st_midway_dep.departure_time
 RETURN
-tu,st_tu,ar,st_ar,p1,p2,midway
-order by (st_ar.arrival_time_int-st_tu.departure_time_int) ASC
-limit 1
+    orig,st_orig,dest,st_dest,p1,p2,midway
+ORDER BY 
+    (st_dest.arrival_time_int-st_orig.departure_time_int) ASC
+LIMIT 1
