@@ -1,18 +1,13 @@
 package com.popameeting.gtfs.neo4j;
 
-import com.popameeting.gtfs.neo4j.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
 import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 
 @SpringBootApplication
-@EnableNeo4jRepositories
+@EnableNeo4jRepositories(basePackages = "com.popameeting.gtfs.neo4j.repository")
 public class Application {
 
     private final static Logger log = LoggerFactory.getLogger(Application.class);

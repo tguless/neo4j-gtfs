@@ -28,5 +28,8 @@ targetCompatibility = 1.8
 dependencies {
     compile("org.springframework.boot:spring-boot-starter-data-neo4j")
     compile("org.springframework.boot:spring-boot-starter-web")
+    compile("org.springframework.boot:spring-boot-starter-data-rest")
+    // https://mvnrepository.com/artifact/org.springframework.data/spring-data-neo4j
+    //compile group: 'org.springframework.data', name: 'spring-data-neo4j', version: '4.2.3.RELEASE'
 }
 
