@@ -81,9 +81,18 @@ public class Neo4jWebServiceController {
 
     @RequestMapping(value = "/LoadData", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public String getStatus() {
+    public String grabAndLoad() {
 
         svc.grabGtfs();
+        loadPrefetched();
+        return "done";
+
+    }
+
+    @RequestMapping(value = "/LoadPrefetched", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public String loadPrefetched() {
+
         agencyRepository.deleteAll();
         routeRepository.deleteAll();
         stopRepository.deleteAll();
