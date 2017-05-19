@@ -6,6 +6,8 @@ import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Set;
+
 /**
  * Created by tgulesserian on 5/18/17.
  */
@@ -27,4 +29,5 @@ public interface StopRepository extends Neo4jRepository<Stop, Long> {
     void addStops();
 
     Stop findByName(@Param("stopName") String stopName,@Depth @Param("depth") int depth);
+
 }

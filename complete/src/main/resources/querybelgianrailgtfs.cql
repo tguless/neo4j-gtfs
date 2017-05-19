@@ -5,17 +5,17 @@
 //Find ANTWERP
 MATCH (s:Stop)
 WHERE upper(s.name) STARTS WITH "ANTW"
-RETURN s
+RETURN s;
 
 //Find Turnhout part 1
 MATCH (s:Stop)
 WHERE s.name STARTS WITH "Turn"
-RETURN s
+RETURN s;
 
 //Find Turnhout part 2
 MATCH (s:Stop)
 WHERE upper(s.name) STARTS WITH "TURN"
-RETURN s
+RETURN s;
 
 //Find Antwerp and Turnhout
 // match (s:Stop)
@@ -66,7 +66,7 @@ RETURN
     p
 LIMIT
     10
-
+;
 
 //range queries with and without indexes
 MATCH (st:Stoptime)
@@ -80,6 +80,7 @@ MATCH
   AND orig_st.departure_time < "09:00:00"
   AND trp.service_id="4"
 return orig, orig_st
+;
 
 //find a DIRECT route with range conditions
 MATCH
@@ -105,12 +106,13 @@ WITH
     nodes(p) as n
 UNWIND
     n as nodes
-MATCH
-    (nodes)-[r:PRECEDES]->(),
-    (nodes)-[loc:LOCATED_AT]->(stp:Stop)
+//MATCH
+//  p=((nodes)-[loc:LOCATED_AT]->(stp:Stop))
+OPTIONAL MATCH
+    p=(nodes)-[r:PRECEDES|LOCATED_AT]->(next)
 RETURN
-    nodes,r,loc,stp
-ORDER BY stp.arrival_time_int
+    p, COALESCE(nodes.stop_sequence, next.stop_sequence AS stopSequence // nodes, r, next, loc,stp
+ORDER BY stopSequence;
 
 //Indirect routes
 
@@ -130,7 +132,7 @@ WHERE
 RETURN
     p
 LIMIT
-    10
+    10;
 
 //plan a specific indirect route
 MATCH 
@@ -150,4 +152,7 @@ RETURN
     orig,st_orig,dest,st_dest,p1,p2,midway
 ORDER BY 
     (st_dest.arrival_time_int-st_orig.departure_time_int) ASC
-LIMIT 1
+LIMIT 1;
+
+
+MATCH (n) WHERE ID(n) = 1266412 WITH n MATCH p=(n)-[*0..1]-(m) RETURN p;
