@@ -1,13 +1,12 @@
 package com.popameeting.gtfs.neo4j.repository;
 
-import com.popameeting.gtfs.neo4j.entity.Stop;
 import com.popameeting.gtfs.neo4j.entity.Stoptime;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
+import org.springframework.data.repository.query.Param;
 
 import java.util.ArrayList;
-import java.util.Set;
 
 /**
  * Created by tgulesserian on 5/18/17.
@@ -39,26 +38,29 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
 
     /*
         I got the sort parameter to pass in using spring data rest, but there seems to be a bug because the order is not
-        coming back correct.
-        http://localhost:8080/stoptimes/search/getMyTrips?sort=stopSequence,asc
-        http://localhost:8080/stoptimes/search/getMyTrips?sort=departureTimeInt,asc
+        coming back correct. I see it making into the cypher query - but JSON I get back has the first two records in the
+        wrong order, but the rest are ok.
+        http://localhost:8080/stoptimes/search/getMyTrips?serviceId=4&origStation=WESTWOOD&origArrivalTimeLow=06:30:00&origArrivalTimeHigh=07:10:00&destStation=HOBOKEN&destArrivalTimeLow=07:00:00&destArrivalTimeHigh=08:00:00&sort=stopSequence,asc
+        http://localhost:8080/stoptimes/search/getMyTrips?serviceId=4&origStation=WESTWOOD&origArrivalTimeLow=06:30:00&origArrivalTimeHigh=07:10:00&destStation=HOBOKEN&destArrivalTimeLow=07:00:00&destArrivalTimeHigh=08:00:00&sort=departureTimeInt,asc
+        With projection:
+        http://localhost:8080/stoptimes/search/getMyTrips?serviceId=4&origStation=WESTWOOD&origArrivalTimeLow=06:30:00&origArrivalTimeHigh=07:10:00&destStation=HOBOKEN&destArrivalTimeLow=07:00:00&destArrivalTimeHigh=08:00:00&sort=departureTimeInt,asc&projection=TripPlanResult
     */
     @Query("//find a DIRECT route with range conditions\n" +
             "MATCH\n" +
-            "  (orig:Stop {name: 'WESTWOOD'})--(orig_st:Stoptime)-[r1:PART_OF_TRIP]->(trp:Trip)\n" +
+            "  (orig:Stop {name: {origStation}})--(orig_st:Stoptime)-[r1:PART_OF_TRIP]->(trp:Trip)\n" +
             "WHERE\n"+
-            "  orig_st.departure_time > '06:30:00'\n" +
-            "  AND orig_st.departure_time < '07:10:00'\n" +
-            "  AND trp.service_id='4'\n" +
+            "  orig_st.departure_time > {origArrivalTimeLow}\n" +
+            "  AND orig_st.departure_time < {origArrivalTimeHigh}\n" +
+            "  AND trp.service_id={serviceId}\n" +
             "WITH\n"+
             "  orig, orig_st\n" +
             "MATCH\n" +
-            "    (dest:Stop {name:'HOBOKEN'})--(dest_st:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip)\n" +
+            "    (dest:Stop {name: {destStation}})--(dest_st:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip)\n" +
             "WHERE\n"+
-            "    dest_st.arrival_time < '08:00:00'\n" +
-            "    AND dest_st.arrival_time > '07:00:00'\n" +
+            "    dest_st.arrival_time < {destArrivalTimeHigh}\n" +
+            "    AND dest_st.arrival_time > {destArrivalTimeLow}\n" +
             "    AND dest_st.arrival_time > orig_st.departure_time\n"+
-            "    AND trp2.service_id='4'\n" +
+            "    AND trp2.service_id={serviceId}\n" +
             "WITH\n"+
             "    dest,dest_st,orig, orig_st\n" +
             "MATCH\n" +
@@ -75,7 +77,14 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
             "    p, //nodes.stop_sequence AS stopSequence \n" +
             "    nodes.departure_time_int AS departureTimeInt \n"
             )
-    ArrayList<Stoptime> getMyTrips(Sort sort);
+    ArrayList<Stoptime> getMyTrips(@Param("serviceId") String serviceId,
+                                             @Param("origStation") String origStation,
+                                             @Param("origArrivalTimeLow") String origArrivalTimeLow,
+                                             @Param("origArrivalTimeHigh") String origArrivalTimeHigh,
+                                             @Param("destStation") String destStation,
+                                             @Param("destArrivalTimeLow") String destArrivalTimeLow,
+                                             @Param("destArrivalTimeHigh")String destArrivalTimeHigh,
+                                             Sort sort);
 
 }
 

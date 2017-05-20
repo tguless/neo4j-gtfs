@@ -59,10 +59,9 @@ public class NjTransitGtfsService {
 
     private final static Logger log = LoggerFactory.getLogger(NjTransitGtfsService.class);
 
-    public Boolean grabGtfs() {
-        if (!downloadtGtfs()) return false;
-        if (!unzipFile(neoimportpath, zipfilename)) return false;
-        return true;
+
+    public Boolean unzipGtfsZip() {
+        return unzipFile(neoimportpath, zipfilename);
     }
 
     public Boolean downloadtGtfs() {

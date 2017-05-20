@@ -82,16 +82,16 @@ public class Neo4jWebServiceController {
     @RequestMapping(value = "/LoadData", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public String grabAndLoad() {
-
-        svc.grabGtfs();
-        loadPrefetched();
+        svc.downloadtGtfs();
+        loadFetchedZip();
         return "done";
-
     }
 
     @RequestMapping(value = "/LoadPrefetched", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public String loadPrefetched() {
+    public String loadFetchedZip() {
+
+        svc.unzipGtfsZip();
 
         agencyRepository.deleteAll();
         routeRepository.deleteAll();
