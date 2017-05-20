@@ -1,8 +1,14 @@
 package com.popameeting.gtfs.neo4j;
 
+import com.popameeting.gtfs.neo4j.dto.TripPlan;
 import com.popameeting.gtfs.neo4j.entity.*;
+import com.popameeting.gtfs.neo4j.entity.projection.stoptime.TripPlanResultPjcn;
 import com.popameeting.gtfs.neo4j.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -33,6 +39,11 @@ public class Neo4jWebServiceController {
 
     @Autowired
     NjTransitGtfsService svc;
+
+
+    @Autowired
+    ProjectionFactory projectionFactory;
+
 
     @GetMapping(path = "/agency/{agencyId}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     @ResponseBody
@@ -86,6 +97,60 @@ public class Neo4jWebServiceController {
         loadFetchedZip();
         return "done";
     }
+
+    @RequestMapping(value = "/test2", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public
+    Page<?>
+    //TripPlan
+    planTrip2(
+            @RequestBody TripPlan plan,
+            Pageable pageable
+            //TripPlan plan, z
+    ){
+
+        /* No Spring Expression Language support yet in for spring data Neo4j
+        Page<?> test= stoptimeRepository.getMyTrips2(
+                plan,
+                pageable).//
+                map(stoptime -> projectionFactory.createProjection(TripPlanResultPjcn.class, stoptime));
+        */
+
+        Page<?> test= stoptimeRepository.getMyTrips(
+                plan.getServiceId(),
+                plan.getOrigStation(),
+                plan.getOrigArrivalTimeLow(),
+                plan.getOrigArrivalTimeHigh(),
+                plan.getDestStation(),
+                plan.getDestArrivalTimeLow(),
+                plan.getDestArrivalTimeHigh(),
+                pageable).//
+                map(stoptime -> projectionFactory.createProjection(TripPlanResultPjcn.class, stoptime));
+
+        return test;
+
+    }
+
+    @RequestMapping(value = "/test", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public Page<?> planTrip(Pageable pageable) {
+
+        //Sort sort = new Sort(Sort.Direction.ASC, "departureTimeInt");
+
+        Page<?> test= stoptimeRepository.getMyTrips(
+                "4",
+                "WESTWOOD",
+                "06:30:00",
+                "07:10:00",
+                "HOBOKEN",
+                "07:00:00",
+                "08:00:00",
+                pageable).//
+                map(stoptime -> projectionFactory.createProjection(TripPlanResultPjcn.class, stoptime));
+        return test;
+
+    }
+
 
     @RequestMapping(value = "/LoadPrefetched", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody

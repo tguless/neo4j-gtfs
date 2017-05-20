@@ -11,7 +11,7 @@ v1.2, 2016-02-15
 :icons: font
 :source-highlighter: prettify
 :project_id: neo4j-gtfs
-:sectanchors:
+:sectanchors:ad
 
 ---
 

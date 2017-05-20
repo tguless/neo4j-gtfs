@@ -1,12 +1,16 @@
 package com.popameeting.gtfs.neo4j.repository;
 
+import com.popameeting.gtfs.neo4j.dto.TripPlan;
 import com.popameeting.gtfs.neo4j.entity.Stoptime;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
 import java.util.ArrayList;
+import java.util.Set;
 
 /**
  * Created by tgulesserian on 5/18/17.
@@ -77,14 +81,54 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
             "    p, //nodes.stop_sequence AS stopSequence \n" +
             "    nodes.departure_time_int AS departureTimeInt \n"
             )
-    ArrayList<Stoptime> getMyTrips(@Param("serviceId") String serviceId,
-                                             @Param("origStation") String origStation,
-                                             @Param("origArrivalTimeLow") String origArrivalTimeLow,
-                                             @Param("origArrivalTimeHigh") String origArrivalTimeHigh,
-                                             @Param("destStation") String destStation,
-                                             @Param("destArrivalTimeLow") String destArrivalTimeLow,
-                                             @Param("destArrivalTimeHigh")String destArrivalTimeHigh,
-                                             Sort sort);
+    Page<Stoptime> getMyTrips(
+                              @Param("serviceId") String serviceId,
+                              @Param("origStation") String origStation,
+                              @Param("origArrivalTimeLow") String origArrivalTimeLow,
+                              @Param("origArrivalTimeHigh") String origArrivalTimeHigh,
+                              @Param("destStation") String destStation,
+                              @Param("destArrivalTimeLow") String destArrivalTimeLow,
+                              @Param("destArrivalTimeHigh")String destArrivalTimeHigh,
+                              Pageable pageRequest);
+
+    /* No Spring Expression Language Support for Neo4j yet
+    @Query("//find a DIRECT route with range conditions\n" +
+            "MATCH\n" +
+            "  (orig:Stop {name: {#{#tripPlan.origStation}}})--(orig_st:Stoptime)-[r1:PART_OF_TRIP]->(trp:Trip)\n" +
+            "WHERE\n"+
+            "  orig_st.departure_time > {#{#tripPlan.origArrivalTimeLow}}\n" +
+            "  AND orig_st.departure_time < {#{#tripPlan.origArrivalTimeLow}}\n" +
+            "  AND trp.service_id={#{#tripPlan.serviceId}}\n" +
+            "WITH\n"+
+            "  orig, orig_st\n" +
+            "MATCH\n" +
+            "    (dest:Stop {name: {#{#tripPlan.destStation}}})--(dest_st:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip)\n" +
+            "WHERE\n"+
+            "    dest_st.arrival_time < {#{#tripPlan.destArrivalTimeHigh}}\n" +
+            "    AND dest_st.arrival_time > {#{#tripPlan.destArrivalTimeLow}}\n" +
+            "    AND dest_st.arrival_time > orig_st.departure_time\n"+
+            "    AND trp2.service_id={#{#tripPlan.serviceId}}\n" +
+            "WITH\n"+
+            "    dest,dest_st,orig, orig_st\n" +
+            "MATCH\n" +
+            "    p = allShortestPaths((orig_st)-[*]->(dest_st))\n" +
+            "WITH\n" +
+            "    nodes(p) AS n\n" +
+            "UNWIND\n" +
+            "    n AS nodes\n" +
+            "//MATCH\n" +
+            "//  p=((nodes)-[loc:LOCATED_AT]->(stp:Stop))\n" +
+            "OPTIONAL MATCH\n" +
+            "  p=(nodes)-[r:PRECEDES|LOCATED_AT]->(next)\n" +
+            "RETURN\n" +
+            "    p, //nodes.stop_sequence AS stopSequence \n" +
+            "    nodes.departure_time_int AS departureTimeInt \n"
+    )
+    Page<Stoptime> getMyTrips2(
+            //ArrayList<Stoptime> getMyTrips(
+            @Param("tripPlan") TripPlan tripPlan,
+            Pageable pageRequest);
+    */
 
 }
 
