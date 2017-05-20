@@ -1,5 +1,9 @@
+---
+tags: []
+projects: [spring-data-rest]
+---
+
 = Java General Transit Feed Specification (GTFS) Neo4j Importer
-Foobar API documentation.
 v1.2, 2016-02-15
 :library: Asciidoctor
 :idprefix:
@@ -8,21 +12,16 @@ v1.2, 2016-02-15
 :toc: manual
 :css-signature: demo
 :toc-placement: preamble
-//:max-width: 800px
-//:doctype: book
-//:sectids!:
-
 :toc:
 :icons: font
 :source-highlighter: prettify
 :project_id: neo4j-gtfs
 
-tags: [spring-data, neo4j, rest, hateoas]
-projects: [spring-data-rest]
-
 == Project Overview
 
-This Spring Boot based project imports General Transit Feed Specification (GTFS) data from NJTransit into Neo4j
+This project is a showcase of spring-data, neo4j, rest and hateoas.
+
+The Spring Boot based application imports General Transit Feed Specification (GTFS) data from NJTransit into Neo4j
 and provides web services to interact with the data.
 
 You need an account as an NJ transit developer.
@@ -34,7 +33,6 @@ http://blog.bruggen.com/p/about-author.html[Rick Van Bruggen] (github account ht
 Loading the data is based off his blog entry http://blog.bruggen.com/2015/11/loading-general-transport-feed-spec.html["Loading General Transport Feed Spec (GTFS) files into Neo4j - part 1/2"]
 
 Querying the data is based off his blog entry http://blog.bruggen.com/2015/11/querying-gtfs-data-using-neo4j-23-part.html["Querying GTFS data - using Neo4j 2.3 - part 2/2"]
-
 
 == What you'll build
 
