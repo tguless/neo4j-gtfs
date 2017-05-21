@@ -92,6 +92,8 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
                               Pageable pageRequest);
 
     /* No Spring Expression Language Support for Neo4j yet
+    https://spring.io/blog/2014/07/15/spel-support-in-spring-data-jpa-query-definitions
+
     @Query("//find a DIRECT route with range conditions\n" +
             "MATCH\n" +
             "  (orig:Stop {name: {#{#tripPlan.origStation}}})--(orig_st:Stoptime)-[r1:PART_OF_TRIP]->(trp:Trip)\n" +

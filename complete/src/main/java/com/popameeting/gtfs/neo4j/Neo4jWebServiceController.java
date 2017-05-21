@@ -6,6 +6,7 @@ import com.popameeting.gtfs.neo4j.entity.projection.stoptime.TripPlanResultPjcn;
 import com.popameeting.gtfs.neo4j.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.projection.ProjectionFactory;
@@ -98,23 +99,23 @@ public class Neo4jWebServiceController {
         return "done";
     }
 
-    @RequestMapping(value = "/test2", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/plantrip", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public
-    Page<?>
-    //TripPlan
-    planTrip2(
-            @RequestBody TripPlan plan,
-            Pageable pageable
-            //TripPlan plan, z
-    ){
+    public Page<?> planTrip2( @RequestBody TripPlan plan, Pageable pageable){
 
-        /* No Spring Expression Language support yet in for spring data Neo4j
+        /* No Spring Expression Language (SpEL) support yet in for spring data Neo4j
+        https://spring.io/blog/2014/07/15/spel-support-in-spring-data-jpa-query-definitions
+
         Page<?> test= stoptimeRepository.getMyTrips2(
                 plan,
                 pageable).//
                 map(stoptime -> projectionFactory.createProjection(TripPlanResultPjcn.class, stoptime));
         */
+
+        if(pageable.getSort() == null || !pageable.getSort().iterator().hasNext()) {
+            Sort sort = new Sort(Sort.Direction.ASC, "departureTimeInt");
+            pageable = new PageRequest(pageable.getPageNumber(), pageable.getPageSize(), sort);
+        }
 
         Page<?> test= stoptimeRepository.getMyTrips(
                 plan.getServiceId(),

@@ -1,0 +1,3 @@
+
+=== Create a Gradle build file
+Below is the https://github.com/tguless/{project_id}/blob/master/initial/build.gradle[initial Gradle build file].

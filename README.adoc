@@ -1,9 +1,10 @@
 = Java General Transit Feed Specification (GTFS) Neo4j Importer
 v1.2, 2016-02-15
 :library: Asciidoctor
+:include:
 :idprefix:
 :numbered:
-:imagesdir: images
+:imagesdir: docs
 :toc: manual
 :css-signature: demo
 :toc-placement: preamble
@@ -11,7 +12,8 @@ v1.2, 2016-02-15
 :icons: font
 :source-highlighter: prettify
 :project_id: neo4j-gtfs
-:sectanchors:ad
+:sectanchors: ad
+
 
 ---
 
@@ -19,36 +21,39 @@ v1.2, 2016-02-15
 
 This project is a showcase of spring-data, neo4j, rest and hateoas.
 
-The Spring Boot based application imports General Transit Feed Specification (GTFS) data from NJTransit into Neo4j
-and provides web services to interact with the data.
+The Spring Boot based application provides the following features:
+
+* Performs an unattended download of General Transit Feed Specification (GTFS) data
+from New Jersey Transit.
+
+* Loads the downloaded GTFS files into Neo4j.
+
+* Provides web services, such as a trip planner API, to allow you to interact with the data.
 
 You need an account as an NJ transit developer.
 You can sign up https://www.njtransit.com/mt/mt_servlet.srv?hdnPageAction=MTDevLoginTo[here].
 
-This project is largely derived off the work that was done by  :
+This project is largely derived off the work that was done by
 http://blog.bruggen.com/p/about-author.html[Rick Van Bruggen] (github account https://github.com/rvanbruggen[rvanbruggen])
 
 Loading the data is based off his blog entry http://blog.bruggen.com/2015/11/loading-general-transport-feed-spec.html["Loading General Transport Feed Spec (GTFS) files into Neo4j - part 1/2"]
 
 Querying the data is based off his blog entry http://blog.bruggen.com/2015/11/querying-gtfs-data-using-neo4j-23-part.html["Querying GTFS data - using Neo4j 2.3 - part 2/2"]
 
-== What you'll build
-
-You will import GTFS files into Neo4j's NoSQL graph-based database from New Jersey Transit website using an automated
-importer, and access the data via several useful Restful endpoints.
-
 == What you'll need
 
 :java_version: 1.8
-include::https://raw.githubusercontent.com/spring-guides/getting-started-macros/master/prereq_editor_jdk_buildtools.adoc[]
 
-include::https://raw.githubusercontent.com/spring-guides/getting-started-macros/master/how_to_complete_this_guide.adoc[]
+include::docs/prereq_editor_jdk_buildtools.adoc[]
 
-include::https://raw.githubusercontent.com/spring-guides/getting-started-macros/master/hide-show-gradle.adoc[]
 
-include::https://raw.githubusercontent.com/spring-guides/getting-started-macros/master/hide-show-maven.adoc[]
+//include::docs/how_to_complete_this_guide.adoc[]
 
-include::https://raw.githubusercontent.com/spring-guides/getting-started-macros/master/hide-show-sts.adoc[]
+//include::docs/hide-show-gradle.adoc[]
+
+//include::docs/hide-show-maven.adoc[]
+
+//include::https://raw.githubusercontent.com/spring-guides/getting-started-macros/master/hide-show-sts.adoc[]
 
 == Standing up a Neo4j server
 
@@ -66,7 +71,7 @@ Also on a mac, make sure the Neo4j imports folder has proper write permissions.
 This should take care of it:
 
 ----
-chmod g+w /usr/local/Cellar/neo4j/3.1.4/libexec/import/nmbs/
+chmod -R g+w /usr/local/Cellar/neo4j/3.1.4/libexec/import
 ----
 
 For other options, visit https://neo4j.com/download/community-edition/
@@ -98,12 +103,18 @@ This changes the password from *neo4j* to *secret* (something to NOT DO in produ
 [[initial]]
 == Permissions to access Neo4j and the NJ Transit Website
 
-Neo4j Community Edition requires credentials to access it. This can be configured with a couple properties.
-If you want to use the automated GTFS imported from the New Jersey Transit website, provide your credentials here.
+Neo4j Community Edition requires credentials to access it. This can be configured with a couple of properties.
 
-["source","java",tab="8",args="--line-range=1-4"]
+["source","java",tab="8",args="--line-range=1-2"]
 ----
-include::complete/src/main/resources/application.properties[lines=1;1..4]
+include::complete/src/main/resources/application.properties[lines=1;1..2]
+----
+
+Similarly, your login to download the GTFS files from the New Jersey Transit website are stored in this file.
+
+["source","java",tab="8",args="--line-range=-4"]
+----
+include::complete/src/main/resources/application.properties[lines=4;3..4]
 ----
 
 This includes the default username `neo4j` and the newly set password `secret` we picked earlier.
@@ -111,6 +122,23 @@ This includes the default username `neo4j` and the newly set password `secret` w
 WARNING: Do NOT store real credentials in your source repository. Instead, configure them in your runtime using http://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#boot-features-external-config[Spring Boot's property overrides].
 
 With this in place, let's load up the data and
+
+== Bringing up the app server
+
+Non widnows systems:
+
+----
+cd complete
+./gradlew bootRun
+----
+
+Windows systems
+----
+cd complete
+.\gradlew.bat bootRun
+----
+
+The server comes up on http://localhost:8080 by default.
 
 == Loading the data
 
@@ -126,20 +154,100 @@ http://localhost:8080/customrest/LoadPrefetched
 == Interact with the data via Spring-Data-Rest
 
 By default all the endpoints exposed via spring-data-rest are left in place.
-You can traverse through those by accessing the root of the app server:
+You can traverse through those by accessing the root of the app server.:
 
 http://localhost:8080/
+
+To understand how this works, read the page https://spring.io/understanding/HATEOAS[Understanding HATEOS] prepared by the
+Spring community.
 
 == Interact with the data via custom web services
 
 The application also exposes web services hosting custom cypher queries for trip planning.
 Currently only one such endpoint exists, and it is purpose built to provide
-trip options from one station to another given departer and arrival time criteria:
+trip options from one station to another given departure and arrival time criteria:
 
-http://localhost:8080/stoptimes/search/getMyTrips?serviceId=4&origStation=WESTWOOD&origArrivalTimeLow=06:30:00&origArrivalTimeHigh=07:10:00&destStation=HOBOKEN&destArrivalTimeLow=07:00:00&destArrivalTimeHigh=08:00:00&sort=departureTimeInt,asc&projection=TripPlanResult
+curltests/planTrip.sh
+----
+include::curltests/planTrip.sh[]
+----
+
+curltests/TripPlan1.json
+----
+include::curltests/TripPlan1.json[]
+----
+
+== Interact with the data using Cypher
+
+Open your browser to Neo4j's own Cypher query tool by opening your browser to http://localhost:7474/ and start writing
+cypher queries like the ones below
+
+----
+//find a DIRECT route with range conditions
+MATCH
+  (orig:Stop {name: "WESTWOOD"})--(orig_st:Stoptime)-[r1:PART_OF_TRIP]->(trp:Trip)
+WHERE
+  orig_st.departure_time > "06:30:00"
+  AND orig_st.departure_time < "07:10:00"
+  AND trp.service_id="4"
+WITH
+  orig, orig_st
+MATCH
+    (dest:Stop {name:"HOBOKEN"})--(dest_st:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip)
+WHERE
+    dest_st.arrival_time < "08:00:00"
+    AND dest_st.arrival_time > "07:00:00"
+    AND dest_st.arrival_time > orig_st.departure_time
+    AND trp2.service_id="4"
+WITH
+    dest,dest_st,orig, orig_st
+MATCH
+    p = allshortestpaths((orig_st)-[*]->(dest_st))
+WITH
+    nodes(p) as n
+UNWIND
+    n as nodes
+//MATCH
+//  p=((nodes)-[loc:LOCATED_AT]->(stp:Stop))
+OPTIONAL MATCH
+    p=(nodes)-[r:PRECEDES|LOCATED_AT]->(next)
+RETURN
+    p, COALESCE(nodes.stop_sequence, next.stop_sequence AS stopSequence
+ORDER BY stopSequence;
+----
+
+image::route_and_stops_direct.png[route_and_stops]
+
+
+----
+//plan a specific indirect route
+MATCH
+    (orig:Stop {name:"WESTWOOD"})--(st_orig:Stoptime),
+    (dest:Stop {name:"HOBOKEN"})--(st_dest:Stoptime),
+    p1=((st_orig)-[:PRECEDES*]->(st_midway_arr:Stoptime)),
+    (st_midway_arr)--(midway:Stop),
+    (midway)--(st_midway_dep:Stoptime),
+    p2=((st_midway_dep)-[:PRECEDES*]->(st_dest))
+WHERE
+    st_orig.departure_time > "08:00:00"
+    AND st_orig.departure_time < "11:00:00"
+    AND st_midway_arr.arrival_time > st_orig.departure_time
+    AND st_midway_dep.departure_time > st_midway_arr.arrival_time
+    AND st_dest.arrival_time > st_midway_dep.departure_time
+RETURN
+    orig,st_orig,dest,st_dest,p1,p2,midway
+ORDER BY
+    (st_dest.arrival_time_int-st_orig.departure_time_int) ASC
+LIMIT 1;
+----
+
+image::route_and_stops_indirect.png[route_and_stops]
 
 == Create your own services
 
 Add new queries to the repository com.popameeting.gtfs.neo4j.repository and interact with them via Spring-Data-Rest's
 provided web services - if you need the data presented differently see the projections in
 com.popameeting.gtfs.neo4j.entity.projection and how they are being used in the URL above.
+
+
+

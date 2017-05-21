@@ -1,0 +1,11 @@
+
+[[reveal-sts]]
+[.reveal-sts]
+== Build with your IDE
+
+[[use-sts]]
+[.use-sts]
+== Build with your IDE
+
+* Read how to import this guide straight into link:/guides/gs/sts/[Spring Tool Suite].
+* Read how to work with this guide in link:/guides/gs/intellij-idea[IntelliJ IDEA].

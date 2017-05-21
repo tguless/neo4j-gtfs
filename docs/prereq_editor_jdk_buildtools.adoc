@@ -1,0 +1,11 @@
+:linkattrs:
+
+ifndef::java_version[:java_version: 1.6]
+
+* About 15 minutes
+* A favorite text editor or IDE
+* http://www.oracle.com/technetwork/java/javase/downloads/index.html[JDK {java_version}] or later
+* http://www.gradle.org/downloads[Gradle 2.3+] or http://maven.apache.org/download.cgi[Maven 3.0+]
+* You can also import the code straight into your IDE:
+** link:/guides/gs/sts[Spring Tool Suite (STS)]
+** link:/guides/gs/intellij-idea/[IntelliJ IDEA]

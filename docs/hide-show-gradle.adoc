@@ -1,0 +1,22 @@
+[[reveal-gradle]]
+[.reveal-gradle]
+== Build with Gradle
+
+[[scratch]]
+[.use-gradle]
+== Build with Gradle
+
+include::build_system_intro.adoc[]
+
+include::create_directory_structure_hello.adoc[]
+
+include::create_both_builds.adoc[]
+
+`build.gradle`
+// AsciiDoc source formatting doesn't support groovy, so using java instead
+[source,java]
+----
+include::../initial/build.gradle[]
+----
+
+include::spring-boot-gradle-plugin.adoc[]
