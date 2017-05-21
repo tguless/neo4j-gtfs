@@ -138,9 +138,6 @@ This includes the default username `neo4j` and the newly set password `secret` w
 
 WARNING: Do NOT store real credentials in your source repository. Instead, configure them in your runtime using http://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#boot-features-external-config[Spring Boot's property overrides].
 
-With this in place, let's load up the data and interact with it.
-
-
 //include::docs/build_an_executable_jar_subhead.adoc[]
 //include::docs/build_an_executable_jar_with_both.adoc[]
 
@@ -167,8 +164,6 @@ java -jar target/{project_id}-0.1.0.jar
 
 NOTE: The procedure above will create a runnable JAR. You can also opt to link:https://spring.io/guides/gs/convert-jar-to-war/[build a classic WAR file] instead.
 
-
-
 //
 
 ////
@@ -187,6 +182,8 @@ cd complete
 ////
 
 The server comes up on http://localhost:8080 by default.
+
+With this in place, let's load up the data and interact with it.
 
 == Loading the data
 
