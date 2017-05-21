@@ -1,4 +1,4 @@
-= Java General Transit Feed Specification (GTFS) Neo4j Importer
+= General Transit Feed Specification (GTFS) Neo4j Importer
 v1.2, 2016-02-15
 :library: Asciidoctor
 :include:
@@ -123,8 +123,12 @@ WARNING: Do NOT store real credentials in your source repository. Instead, confi
 
 With this in place, let's load up the data and
 
-== Bringing up the app server
 
+include::docs/build_an_executable_jar_subhead.adoc[]
+
+include::docs/build_an_executable_jar_with_both.adoc[]
+
+////
 Non widnows systems:
 
 ----
@@ -137,6 +141,7 @@ Windows systems
 cd complete
 .\gradlew.bat bootRun
 ----
+////
 
 The server comes up on http://localhost:8080 by default.
 
