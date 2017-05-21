@@ -44,8 +44,21 @@ Querying the data is based off his blog entry http://blog.bruggen.com/2015/11/qu
 
 :java_version: 1.8
 
-include::docs/prereq_editor_jdk_buildtools.adoc[]
+//include::docs/prereq_editor_jdk_buildtools.adoc[]
 
+//
+:linkattrs:
+
+ifndef::java_version[:java_version: 1.6]
+
+* About 15 minutes
+* A favorite text editor or IDE
+* http://www.oracle.com/technetwork/java/javase/downloads/index.html[JDK {java_version}] or later
+* http://www.gradle.org/downloads[Gradle 2.3+] or http://maven.apache.org/download.cgi[Maven 3.0+]
+* You can also import the code straight into your IDE:
+** link:/guides/gs/sts[Spring Tool Suite (STS)]
+** link:/guides/gs/intellij-idea/[IntelliJ IDEA]
+//
 
 //include::docs/how_to_complete_this_guide.adoc[]
 
@@ -107,26 +120,56 @@ Neo4j Community Edition requires credentials to access it. This can be configure
 
 ["source","java",tab="8",args="--line-range=1-2"]
 ----
-include::complete/src/main/resources/application.properties[lines=1;1..2]
+spring.data.neo4j.username=neo4j
+spring.data.neo4j.password=secret
 ----
+//include::complete/src/main/resources/application.properties[lines=1;1..2]
 
 Similarly, your login to download the GTFS files from the New Jersey Transit website are stored in this file.
 
 ["source","java",tab="8",args="--line-range=-4"]
 ----
-include::complete/src/main/resources/application.properties[lines=4;3..4]
+njgtfs.login=foo
+njgtfs.password=bar
 ----
+//include::complete/src/main/resources/application.properties[lines=4;3..4]
 
 This includes the default username `neo4j` and the newly set password `secret` we picked earlier.
 
 WARNING: Do NOT store real credentials in your source repository. Instead, configure them in your runtime using http://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#boot-features-external-config[Spring Boot's property overrides].
 
-With this in place, let's load up the data and
+With this in place, let's load up the data and interact with it.
 
 
-include::docs/build_an_executable_jar_subhead.adoc[]
+//include::docs/build_an_executable_jar_subhead.adoc[]
+//include::docs/build_an_executable_jar_with_both.adoc[]
 
-include::docs/build_an_executable_jar_with_both.adoc[]
+//
+== Build an executable JAR
+
+:linkattrs:
+
+You can run the application from the command line with Gradle or Maven. Or you can build a single executable JAR file that contains all the necessary dependencies, classes, and resources, and run that. This makes it easy to ship, version, and deploy the service as an application throughout the development lifecycle, across different environments, and so forth.
+
+If you are using Gradle, you can run the application using `./gradlew bootRun`.  Or you can build the JAR file using `./gradlew build`. Then you can run the JAR file:
+
+[subs="attributes", role="has-copy-button"]
+....
+java -jar build/libs/{project_id}-0.1.0.jar
+....
+
+If you are using Maven, you can run the application using `./mvnw spring-boot:run`. Or you can build the JAR file with `./mvnw clean package`. Then you can run the JAR file:
+
+[subs="attributes", role="has-copy-button"]
+....
+java -jar target/{project_id}-0.1.0.jar
+....
+
+NOTE: The procedure above will create a runnable JAR. You can also opt to link:https://spring.io/guides/gs/convert-jar-to-war/[build a classic WAR file] instead.
+
+
+
+//
 
 ////
 Non widnows systems:
@@ -174,13 +217,25 @@ trip options from one station to another given departure and arrival time criter
 
 curltests/planTrip.sh
 ----
-include::curltests/planTrip.sh[]
+#!/usr/bin/env bash
+curl -H "Content-Type: application/json" -X POST --data @TripPlan1.json http://localhost:8080/customrest/plantrip
 ----
+//include::curltests/planTrip.sh[]
+
 
 curltests/TripPlan1.json
 ----
-include::curltests/TripPlan1.json[]
+{
+               "serviceId":"4",
+               "origStation":"WESTWOOD",
+               "origArrivalTimeLow" :"06:30:00",
+               "origArrivalTimeHigh" :"07:10:00",
+               "destStation" :"HOBOKEN",
+               "destArrivalTimeLow":"06:30:00",
+               "destArrivalTimeHigh":"08:00:00"
+}
 ----
+//include::curltests/TripPlan1.json[]
 
 == Interact with the data using Cypher
 
