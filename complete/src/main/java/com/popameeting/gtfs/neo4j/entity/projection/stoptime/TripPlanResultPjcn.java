@@ -2,6 +2,7 @@ package com.popameeting.gtfs.neo4j.entity.projection.stoptime;
 
 import com.popameeting.gtfs.neo4j.entity.Stoptime;
 import com.popameeting.gtfs.neo4j.entity.projection.stop.StopNamePjcn;
+import com.popameeting.gtfs.neo4j.entity.projection.trip.TripNoBackrefsPjcn;
 import org.springframework.data.rest.core.config.Projection;
 
 import java.util.Set;
@@ -16,5 +17,5 @@ public interface TripPlanResultPjcn {
     public String getDepartureTime();
     public int getStopSequence();
     public Set<StopNamePjcn> getStops();
-
+    public Set<TripNoBackrefsPjcn> getTrips();
 }

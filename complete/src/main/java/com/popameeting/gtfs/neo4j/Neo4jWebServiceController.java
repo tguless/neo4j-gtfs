@@ -138,14 +138,20 @@ public class Neo4jWebServiceController {
 
         //Sort sort = new Sort(Sort.Direction.ASC, "departureTimeInt");
 
+        if(pageable.getSort() == null || !pageable.getSort().iterator().hasNext()) {
+            Sort sort = new Sort(Sort.Direction.ASC, "tripId").
+                        and( new Sort(Sort.Direction.ASC, "departureTimeInt"));
+            pageable = new PageRequest(pageable.getPageNumber(), 500, sort);
+        }
+
         Page<?> test= stoptimeRepository.getMyTrips(
                 "4",
                 "WESTWOOD",
                 "06:30:00",
-                "07:10:00",
+                "07:30:00",
                 "HOBOKEN",
                 "07:00:00",
-                "08:00:00",
+                "09:00:00",
                 pageable).//
                 map(stoptime -> projectionFactory.createProjection(TripPlanResultPjcn.class, stoptime));
         return test;

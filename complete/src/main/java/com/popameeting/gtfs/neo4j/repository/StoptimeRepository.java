@@ -72,14 +72,20 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
             "WITH\n" +
             "    nodes(p) AS n\n" +
             "UNWIND\n" +
-            "    n AS nodes\n" +
+            "    n AS stoptimes\n" +
             "//MATCH\n" +
             "//  p=((nodes)-[loc:LOCATED_AT]->(stp:Stop))\n" +
-            "OPTIONAL MATCH\n" +
-            "  p=(nodes)-[r:PRECEDES|LOCATED_AT]->(next)\n" +
+            //"OPTIONAL MATCH\n" +
+            //"  p=(nodes)-[r:PRECEDES|LOCATED_AT]->(next)\n" +
+            //"    p=(nodes)-[r:LOCATED_AT|PART_OF_TRIP]->(next)\n" +
+            "MATCH\n" +
+            "    p2=(stoptimes)-[r2:PART_OF_TRIP]->(trip)\n" +
+            "MATCH\n" +
+            "    p=(stoptimes)-[r:LOCATED_AT]->(stop)\n" +
             "RETURN\n" +
-            "    p, //nodes.stop_sequence AS stopSequence \n" +
-            "    nodes.departure_time_int AS departureTimeInt \n"
+            "    p, p2,\n" +
+            "   stoptimes.departure_time_int AS departureTimeInt, \n" +
+            "   trip.id AS tripId"
             )
     Page<Stoptime> getMyTrips(
                               @Param("serviceId") String serviceId,

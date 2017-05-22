@@ -40,7 +40,10 @@ Loading the data is based off his blog entry http://blog.bruggen.com/2015/11/loa
 
 Querying the data is based off his blog entry http://blog.bruggen.com/2015/11/querying-gtfs-data-using-neo4j-23-part.html["Querying GTFS data - using Neo4j 2.3 - part 2/2"]
 
-== What you'll need
+
+== Getting neo4j-gtfs Up and Running
+
+=== What you'll need
 
 :java_version: 1.8
 
@@ -52,12 +55,15 @@ Querying the data is based off his blog entry http://blog.bruggen.com/2015/11/qu
 ifndef::java_version[:java_version: 1.6]
 
 * About 15 minutes
-* A favorite text editor or IDE
+* You need access to GTFS files. You have two approaches to load this data:
+** Create a developer account at NJ Transit, and have neo4j-gtfs download and load the file for you.
+** Download a GTFS feed file from any transportation provider, and have neo4j-gtfs load it for you.
+//* A favorite text editor or IDE
 * http://www.oracle.com/technetwork/java/javase/downloads/index.html[JDK {java_version}] or later
 * http://www.gradle.org/downloads[Gradle 2.3+] or http://maven.apache.org/download.cgi[Maven 3.0+]
 * You can also import the code straight into your IDE:
-** link:/guides/gs/sts[Spring Tool Suite (STS)]
-** link:/guides/gs/intellij-idea/[IntelliJ IDEA]
+** link:https://spring.io/guides/gs/sts/[Spring Tool Suite (STS)]
+** link:https://spring.io/guides/gs/intellij-idea/[IntelliJ IDEA]
 //
 
 //include::docs/how_to_complete_this_guide.adoc[]
@@ -68,7 +74,7 @@ ifndef::java_version[:java_version: 1.6]
 
 //include::https://raw.githubusercontent.com/spring-guides/getting-started-macros/master/hide-show-sts.adoc[]
 
-== Standing up a Neo4j server
+=== Standing up a Neo4j server
 
 Before you can build a this application, you need to set up a Neo4j server.
 
@@ -114,7 +120,7 @@ This changes the password from *neo4j* to *secret* (something to NOT DO in produ
 
 
 [[initial]]
-== Permissions to access Neo4j and the NJ Transit Website
+=== Permissions to access Neo4j and the NJ Transit Website
 
 Neo4j Community Edition requires credentials to access it. This can be configured with a couple of properties.
 
@@ -125,6 +131,8 @@ spring.data.neo4j.password=secret
 ----
 //include::complete/src/main/resources/application.properties[lines=1;1..2]
 
+This includes the default username `neo4j` and the newly set password `secret` we picked earlier.
+
 Similarly, your login to download the GTFS files from the New Jersey Transit website are stored in this file.
 
 ["source","java",tab="8",args="--line-range=-4"]
@@ -134,15 +142,13 @@ njgtfs.password=bar
 ----
 //include::complete/src/main/resources/application.properties[lines=4;3..4]
 
-This includes the default username `neo4j` and the newly set password `secret` we picked earlier.
-
 WARNING: Do NOT store real credentials in your source repository. Instead, configure them in your runtime using http://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#boot-features-external-config[Spring Boot's property overrides].
 
 //include::docs/build_an_executable_jar_subhead.adoc[]
 //include::docs/build_an_executable_jar_with_both.adoc[]
 
 //
-== Build an executable JAR
+=== Build an executable JAR
 
 :linkattrs:
 
@@ -185,18 +191,23 @@ The server comes up on http://localhost:8080 by default.
 
 With this in place, let's load up the data and interact with it.
 
-== Loading the data
+== Using neo4j-gtfs
+
+=== Loading the data
 
 Two endpoints are provided:
 
-* Dowload and import the data fully automated: +
+* Dowload and import the data fully automated from the NJ Transit developer website: +
 http://localhost:8080/customrest/LoadData
 
-* Import a predownloaded zip file and place it in the same directory as the Spring Boot app server (default filename rail_data.zip).
-Then initiate importing it into Neo4j by calling this URL: +
+
+* The NJ GTFS download is clickwrapped, so getting things to work automated has been very temperamental. +
+If the /customrest/LoadData endpoint does not succeed, you can import a pre-downloaded zip file by:
+** Placing it in the same directory as the Spring Boot app server (default filename rail_data.zip).
+** Then initiate importing it into Neo4j by calling this URL: +
 http://localhost:8080/customrest/LoadPrefetched
 
-== Interact with the data via Spring-Data-Rest
+=== Interact with the data via Spring-Data-Rest
 
 By default all the endpoints exposed via spring-data-rest are left in place.
 You can traverse through those by accessing the root of the app server.:
@@ -206,7 +217,7 @@ http://localhost:8080/
 To understand how this works, read the page https://spring.io/understanding/HATEOAS[Understanding HATEOS] prepared by the
 Spring community.
 
-== Interact with the data via custom web services
+=== Interact with the data via custom web services
 
 The application also exposes web services hosting custom cypher queries for trip planning.
 Currently only one such endpoint exists, and it is purpose built to provide
@@ -234,7 +245,7 @@ curltests/TripPlan1.json
 ----
 //include::curltests/TripPlan1.json[]
 
-== Interact with the data using Cypher
+=== Interact with the data using Cypher
 
 Open your browser to Neo4j's own Cypher query tool by opening your browser to http://localhost:7474/ and start writing
 cypher queries like the ones below
@@ -300,7 +311,7 @@ LIMIT 1;
 
 image::route_and_stops_indirect.png[route_and_stops]
 
-== Create your own services
+=== Create your own services
 
 Add new queries to the repository com.popameeting.gtfs.neo4j.repository and interact with them via Spring-Data-Rest's
 provided web services - if you need the data presented differently see the projections in

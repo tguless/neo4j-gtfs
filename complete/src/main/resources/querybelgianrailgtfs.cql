@@ -87,32 +87,36 @@ MATCH
   (orig:Stop {name: "WESTWOOD"})--(orig_st:Stoptime)-[r1:PART_OF_TRIP]->(trp:Trip)
 WHERE
   orig_st.departure_time > "06:30:00"
-  AND orig_st.departure_time < "07:10:00"
+  AND orig_st.departure_time < "07:30:00"
   AND trp.service_id="4"
 WITH
   orig, orig_st
 MATCH
     (dest:Stop {name:"HOBOKEN"})--(dest_st:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip)
 WHERE
-    dest_st.arrival_time < "08:00:00"
+    dest_st.arrival_time < "09:00:00"
     AND dest_st.arrival_time > "07:00:00"
     AND dest_st.arrival_time > orig_st.departure_time
     AND trp2.service_id="4"
 WITH
-    dest,dest_st,orig, orig_st
+    dest,dest_st,orig, orig_st, trp2
 MATCH
     p = allshortestpaths((orig_st)-[*]->(dest_st))
 WITH
     nodes(p) as n
 UNWIND
-    n as nodes
+    n as stoptime
 //MATCH
 //  p=((nodes)-[loc:LOCATED_AT]->(stp:Stop))
-OPTIONAL MATCH
-    p=(nodes)-[r:PRECEDES|LOCATED_AT]->(next)
+MATCH
+    p2=(stoptime)-[r2:PART_OF_TRIP]->(trip)
+MATCH
+    p=(stoptime)-[r:LOCATED_AT]->(stop)
+    //p=(nodes)-[r:LOCATED_AT]->(next)
 RETURN
-    p, COALESCE(nodes.stop_sequence, next.stop_sequence AS stopSequence // nodes, r, next, loc,stp
-ORDER BY stopSequence;
+    p, p2 //, COALESCE(nodes.stop_sequence, next.stop_sequence) AS stopSequence // nodes, r, next, loc,stp
+ORDER BY trip.trip_id, stoptime.departure_time_int;
+
 
 //Indirect routes
 
@@ -136,11 +140,11 @@ LIMIT
 
 //plan a specific indirect route
 MATCH 
-    (orig:Stop {name:"WESTWOOD"})--(st_orig:Stoptime),
-    (dest:Stop {name:"HOBOKEN"})--(st_dest:Stoptime),
+    p3=(orig:Stop {name:"WESTWOOD"})--(st_orig:Stoptime),
+    p4=(dest:Stop {name:"RAMSEY"})--(st_dest:Stoptime),
     p1=((st_orig)-[:PRECEDES*]->(st_midway_arr:Stoptime)),
-    (st_midway_arr)--(midway:Stop),
-    (midway)--(st_midway_dep:Stoptime),
+    p5=(st_midway_arr)--(midway:Stop),
+    p6=(midway)--(st_midway_dep:Stoptime),
     p2=((st_midway_dep)-[:PRECEDES*]->(st_dest))
 WHERE
     st_orig.departure_time > "08:00:00"
@@ -149,10 +153,11 @@ WHERE
     AND st_midway_dep.departure_time > st_midway_arr.arrival_time
     AND st_dest.arrival_time > st_midway_dep.departure_time
 RETURN
-    orig,st_orig,dest,st_dest,p1,p2,midway
+   p3,p4, p5,p6, p1,p2,midway
 ORDER BY 
     (st_dest.arrival_time_int-st_orig.departure_time_int) ASC
 LIMIT 1;
+
 
 
 MATCH (n) WHERE ID(n) = 1266412 WITH n MATCH p=(n)-[*0..1]-(m) RETURN p;
