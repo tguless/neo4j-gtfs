@@ -73,11 +73,6 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
             "    nodes(p) AS n\n" +
             "UNWIND\n" +
             "    n AS stoptimes\n" +
-            "//MATCH\n" +
-            "//  p=((nodes)-[loc:LOCATED_AT]->(stp:Stop))\n" +
-            //"OPTIONAL MATCH\n" +
-            //"  p=(nodes)-[r:PRECEDES|LOCATED_AT]->(next)\n" +
-            //"    p=(nodes)-[r:LOCATED_AT|PART_OF_TRIP]->(next)\n" +
             "MATCH\n" +
             "    p2=(stoptimes)-[r2:PART_OF_TRIP]->(trip)\n" +
             "MATCH\n" +
@@ -96,6 +91,61 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
                               @Param("destArrivalTimeLow") String destArrivalTimeLow,
                               @Param("destArrivalTimeHigh")String destArrivalTimeHigh,
                               Pageable pageRequest);
+
+    @Query("MATCH\n" +
+            "    p3=(orig:Stop {name:{origStation}})--(st_orig:Stoptime)-[r1:PART_OF_TRIP]->(trp1:Trip),\n" +
+            "    p4=(dest:Stop {name:{destStation}})--(st_dest:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip),\n" +
+            "    p1=((st_orig)-[:PRECEDES*]->(st_midway_arr:Stoptime)),\n"+
+            "    p5=(st_midway_arr)--(midway:Stop)--(st_midway_dep:Stoptime),\n" +
+            "    p2=((st_midway_dep)-[:PRECEDES*]->(st_dest))\n" +
+            "WHERE\n" +
+            "    st_orig.departure_time > {origArrivalTimeLow}\n" +
+            "    AND st_orig.departure_time < {origArrivalTimeHigh}\n" +
+            "    AND st_dest.arrival_time < {destArrivalTimeHigh}\n" +
+            "    AND st_dest.arrival_time > {destArrivalTimeLow}\n" +
+            "    AND st_midway_arr.arrival_time > st_orig.departure_time\n" +
+            "    AND st_midway_dep.departure_time > st_midway_arr.arrival_time\n" +
+            "    AND st_dest.arrival_time > st_midway_dep.departure_time\n" +
+            "    AND trp1.service_id = {serviceId}\n" +
+            "    AND trp2.service_id = {serviceId}\n" +
+            "RETURN\n" +
+            "    p3,p4, p5, p1,p2,midway\n" +
+            "ORDER BY\n" +
+            "    (st_dest.arrival_time_int-st_orig.departure_time_int) ASC\n" +
+            "SKIP {skip} LIMIT 1")
+    Page<Stoptime> getMyTripsOneStop(
+                                        @Param("serviceId") String serviceId,
+                                        @Param("origStation") String origStation,
+                                        @Param("origArrivalTimeLow") String origArrivalTimeLow,
+                                        @Param("origArrivalTimeHigh") String origArrivalTimeHigh,
+                                        @Param("destStation") String destStation,
+                                        @Param("destArrivalTimeLow") String destArrivalTimeLow,
+                                        @Param("destArrivalTimeHigh")String destArrivalTimeHigh,
+                                        @Param("skip")Long skip
+                                    );
+
+    @Query("MATCH\n"+
+          "  (orig:Stop {name: 'WESTWOOD'})--(orig_st:Stoptime)-[r1:PART_OF_TRIP]->(trp:Trip)\n"+
+          "WHERE\n"+
+          "  orig_st.departure_time > '06:30:00'\n"+
+          "  AND orig_st.departure_time < '07:30:00'\n"+
+          "  AND trp.service_id='4'\n"+
+          "WITH\n"+
+          "  orig, orig_st\n"+
+          "MATCH\n"+
+          "  (dest:Stop {name:'HOBOKEN'})--(dest_st:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip)\n"+
+          "  WHERE\n"+
+          "  dest_st.arrival_time < '09:00:00'\n"+
+          "  AND dest_st.arrival_time > '07:00:00'\n"+
+          "  AND dest_st.arrival_time > orig_st.departure_time\n"+
+          "  AND trp2.service_id='4'\n"+
+          "WITH\n"+
+          "  dest,dest_st,orig, orig_st, trp2\n"+
+          "MATCH\n"+
+          "  p = allshortestpaths((orig_st)-[*]->(dest_st))\n"+
+          "RETURN\n"+
+          "  p")
+    Set<Stoptime> getMyStops();
 
     /* No Spring Expression Language Support for Neo4j yet
     https://spring.io/blog/2014/07/15/spel-support-in-spring-data-jpa-query-definitions

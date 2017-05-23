@@ -15,6 +15,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -101,7 +104,7 @@ public class Neo4jWebServiceController {
 
     @RequestMapping(value = "/plantrip", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public Page<?> planTrip2( @RequestBody TripPlan plan, Pageable pageable){
+    public Page<?> planTrip( @RequestBody TripPlan plan, Pageable pageable){
 
         /* No Spring Expression Language (SpEL) support yet in for spring data Neo4j
         https://spring.io/blog/2014/07/15/spel-support-in-spring-data-jpa-query-definitions
@@ -117,7 +120,7 @@ public class Neo4jWebServiceController {
             pageable = new PageRequest(pageable.getPageNumber(), pageable.getPageSize(), sort);
         }
 
-        Page<?> test= stoptimeRepository.getMyTrips(
+        Page<?> result= stoptimeRepository.getMyTrips(
                 plan.getServiceId(),
                 plan.getOrigStation(),
                 plan.getOrigArrivalTimeLow(),
@@ -128,15 +131,59 @@ public class Neo4jWebServiceController {
                 pageable).//
                 map(stoptime -> projectionFactory.createProjection(TripPlanResultPjcn.class, stoptime));
 
-        return test;
+        return result;
 
     }
 
+    @RequestMapping(value = "/plantrip2", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public Set<LinkedHashSet <Stoptime>> planTrip2( @RequestBody TripPlan plan){
+
+        Sort sort = new Sort(Sort.Direction.ASC, "tripId").
+                and( new Sort(Sort.Direction.ASC, "departureTimeInt"));
+        Pageable pageable = new PageRequest(0, 1000000, sort);
+
+        Page<Stoptime> imResult = stoptimeRepository.getMyTrips(
+                plan.getServiceId(),
+                plan.getOrigStation(),
+                plan.getOrigArrivalTimeLow(),
+                plan.getOrigArrivalTimeHigh(),
+                plan.getDestStation(),
+                plan.getDestArrivalTimeLow(),
+                plan.getDestArrivalTimeHigh(),
+                pageable);
+
+        HashSet <LinkedHashSet<Stoptime>> finalResult = breakupTrips( imResult);
+
+        return finalResult;
+
+    }
+
+    private  HashSet <LinkedHashSet<Stoptime>> breakupTrips(Page<Stoptime> test) {
+        HashSet <LinkedHashSet<Stoptime>> result = new HashSet<>();
+
+        String lastTripId = null;
+        LinkedHashSet currentSet = null;
+
+        for (Stoptime stoptime: test.getContent()) {
+            Trip currentTrip = stoptime.getTrips().iterator().next();
+
+            if (lastTripId == null  || !lastTripId.equals(currentTrip.getTripId())) {
+                currentSet = new LinkedHashSet<Stoptime>();
+                result.add(currentSet);
+                lastTripId = currentTrip.getTripId();
+            }
+            TripPlanResultPjcn tripPlan = projectionFactory.createProjection(TripPlanResultPjcn.class, stoptime);
+
+            currentSet.add(tripPlan);
+        }
+        return result;
+    }
+
+
     @RequestMapping(value = "/test", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public Page<?> planTrip(Pageable pageable) {
-
-        //Sort sort = new Sort(Sort.Direction.ASC, "departureTimeInt");
+    public Page<?> testTrip1(Pageable pageable) {
 
         if(pageable.getSort() == null || !pageable.getSort().iterator().hasNext()) {
             Sort sort = new Sort(Sort.Direction.ASC, "tripId").
@@ -144,7 +191,7 @@ public class Neo4jWebServiceController {
             pageable = new PageRequest(pageable.getPageNumber(), 500, sort);
         }
 
-        Page<?> test= stoptimeRepository.getMyTrips(
+        Page<?> result= stoptimeRepository.getMyTrips(
                 "4",
                 "WESTWOOD",
                 "06:30:00",
@@ -154,10 +201,37 @@ public class Neo4jWebServiceController {
                 "09:00:00",
                 pageable).//
                 map(stoptime -> projectionFactory.createProjection(TripPlanResultPjcn.class, stoptime));
-        return test;
+
+        return result;
 
     }
 
+    @RequestMapping(value = "/test2", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public  Set<LinkedHashSet <Stoptime>>testTrip1() {
+
+        Sort sort = new Sort(Sort.Direction.ASC, "tripId").
+                    and( new Sort(Sort.Direction.ASC, "departureTimeInt"));
+        Pageable pageable = new PageRequest(0, 1000000, sort);
+
+        Page<Stoptime> imResult= stoptimeRepository.getMyTrips(
+                "4",
+                "WESTWOOD",
+                "06:30:00",
+                "07:30:00",
+                "HOBOKEN",
+                "07:00:00",
+                "09:00:00",
+                pageable);
+
+        String lastTripId = null;
+        LinkedHashSet currentSet = null;
+
+        HashSet <LinkedHashSet<Stoptime>> result = breakupTrips( imResult);
+
+        return result;
+
+    }
 
     @RequestMapping(value = "/LoadPrefetched", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
