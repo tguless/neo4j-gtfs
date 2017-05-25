@@ -1,7 +1,7 @@
 {
   "serviceId":"4",
-  "origStation":"WESTWOOD",
-  "origArrivalTimeLow" :"06:30:00",
+  "origStation":"WOOD-RIDGE",
+  "origArrivalTimeLow" :"07:00:00",
   "origArrivalTimeHigh" :"08:10:00",
   "destStation" :"HOBOKEN",
   "destArrivalTimeLow":"06:30:00",

@@ -134,9 +134,31 @@ public class Neo4jWebServiceController {
     }
     */
 
+
+
     @RequestMapping(value = "/planTrip", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public Set<LinkedHashSet <Stoptime>> planTrip2( @RequestBody TripPlan plan){
+    public Set <HashSet <LinkedHashSet<Stoptime>>>  planTrip( @RequestBody TripPlan plan){
+
+        Sort sort = new Sort(Sort.Direction.ASC, "tripId").
+                and( new Sort(Sort.Direction.ASC, "departureTimeInt"));
+        Pageable pageable = new PageRequest(0, 1000000, sort);
+
+        Set <HashSet <LinkedHashSet<Stoptime>>> tripPlanNoTransfer =  planTripNoTransfer(plan);
+        if (tripPlanNoTransfer.size() > 0) {
+            return tripPlanNoTransfer;
+        } else {
+            tripPlanNoTransfer =  planTripOneTransfer(plan);
+            return tripPlanNoTransfer;
+        }
+
+    }
+
+    @RequestMapping(value = "/planTripNoTransfer", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public Set <HashSet <LinkedHashSet<Stoptime>>> planTripNoTransfer( @RequestBody TripPlan plan){
+
+        HashSet <HashSet <LinkedHashSet<Stoptime>>> allPlansWithLegs = new HashSet<>();
 
         Sort sort = new Sort(Sort.Direction.ASC, "tripId").
                 and( new Sort(Sort.Direction.ASC, "departureTimeInt"));
@@ -154,13 +176,22 @@ public class Neo4jWebServiceController {
 
         HashSet <LinkedHashSet<Stoptime>> finalResult = breakupTrips( imResult);
 
-        return finalResult;
+        //Single leg trip
+        for (LinkedHashSet<Stoptime> leg : finalResult) {
+            HashSet <LinkedHashSet<Stoptime>> planWithLegs = new HashSet<>();
+            planWithLegs.add(leg);
+            allPlansWithLegs.add((planWithLegs));
+        }
+
+        return allPlansWithLegs;
 
     }
 
-    @RequestMapping(value = "/planTripOneStop", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/planTripOneTransfer", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public Set<LinkedHashSet <Stoptime>> planTripOneStop( @RequestBody TripPlan plan){
+    public Set <HashSet <LinkedHashSet<Stoptime>>>  planTripOneTransfer( @RequestBody TripPlan plan){
+
+        HashSet <HashSet <LinkedHashSet<Stoptime>>> allPlansWithLegs = new HashSet<>();
 
         Sort sort = new Sort(Sort.Direction.ASC, "tripId").
                 and( new Sort(Sort.Direction.ASC, "departureTimeInt"));
@@ -176,9 +207,18 @@ public class Neo4jWebServiceController {
                 plan.getDestArrivalTimeHigh(),
                 1L);
 
-        HashSet <LinkedHashSet<Stoptime>> finalResult = breakupTrips( imResult);
+        HashSet <LinkedHashSet<Stoptime>> allLegs = breakupTrips( imResult);
 
-        return finalResult;
+        //Multi leg single plan
+        HashSet <LinkedHashSet<Stoptime>> planWithLegs = new HashSet<>();
+        for (LinkedHashSet<Stoptime> leg : allLegs) {
+            planWithLegs.add(leg);
+
+        }
+
+        allPlansWithLegs.add((planWithLegs));
+
+        return allPlansWithLegs;
 
     }
 

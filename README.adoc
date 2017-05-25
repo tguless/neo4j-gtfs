@@ -226,7 +226,7 @@ trip options from one station to another given departure and arrival time criter
 curltests/planTrip.sh
 ----
 #!/usr/bin/env bash
-curl -H "Content-Type: application/json" -X POST --data @TripPlan.json http://localhost:8080/customrest/planTrip | python -m json.tool
+curl -H "Content-Type: application/json" -X POST --data @TripPlanNoTransfer.json http://localhost:8080/customrest/planTripNoTransfer | python -m json.tool
 ----
 //include::curltests/planTrip.sh[]
 
@@ -234,20 +234,74 @@ curltests/TripPlan.json
 ----
 {
   "serviceId":"4",
-  "origStation":"WESTWOOD",
-  "origArrivalTimeLow" :"06:30:00",
+  "origStation":"WOOD-RIDGE",
+  "origArrivalTimeLow" :"07:00:00",
   "origArrivalTimeHigh" :"08:10:00",
   "destStation" :"HOBOKEN",
   "destArrivalTimeLow":"06:30:00",
   "destArrivalTimeHigh":"10:00:00"
 }
 ----
+
+Response - 2 possible trips - One leaving at 7:43 and the second leaving at 7:27:
+
+----
+[
+    [
+        {
+            "arrivalTime": "07:43:00",
+            "departureTime": "07:43:00",
+            "stopName": "WOOD-RIDGE",
+            "stopSequence": 15,
+            "tripId": "2815"
+        },
+        {
+            "arrivalTime": "07:54:00",
+            "departureTime": "07:54:00",
+            "stopName": "FRANK R LAUTENBERG SECAUCUS LOWER LEVEL",
+            "stopSequence": 16,
+            "tripId": "2815"
+        },
+        {
+            "arrivalTime": "08:05:00",
+            "departureTime": "08:05:00",
+            "stopName": "HOBOKEN",
+            "stopSequence": 17,
+            "tripId": "2815"
+        }
+    ],
+    [
+        {
+            "arrivalTime": "07:27:00",
+            "departureTime": "07:27:00",
+            "stopName": "WOOD-RIDGE",
+            "stopSequence": 16,
+            "tripId": "2821"
+        },
+        {
+            "arrivalTime": "07:38:00",
+            "departureTime": "07:38:00",
+            "stopName": "FRANK R LAUTENBERG SECAUCUS LOWER LEVEL",
+            "stopSequence": 17,
+            "tripId": "2821"
+        },
+        {
+            "arrivalTime": "07:49:00",
+            "departureTime": "07:49:00",
+            "stopName": "HOBOKEN",
+            "stopSequence": 18,
+            "tripId": "2821"
+        }
+    ]
+]
+
+----
 //include::curltests/TripPlan1.json[]
 
 curltests/planTripOneStop.sh
 ----
 #!/usr/bin/env bash
-curl -H "Content-Type: application/json" -X POST --data @TripPlanOneStop.json http://localhost:8080/customrest/planTripOneStop | python -m json.tool
+curl -H "Content-Type: application/json" -X POST --data @TripPlanOneTransfer.json http://localhost:8080/customrest/planTripOneTransfer | python -m json.tool
 ----
 //include::curltests/planTrip.sh[]
 
@@ -255,13 +309,54 @@ curltests/TripPlanOneStop.json
 ----
 {
   "serviceId":"4",
-  "origStation":"WESTWOOD",
+  "origStation":"WOOD-RIDGE",
   "origArrivalTimeLow" :"06:30:00",
   "origArrivalTimeHigh" :"07:10:00",
-  "destStation" :"RAMSEY",
+  "destStation" :"RUTHERFORD",
   "destArrivalTimeLow":"06:30:00",
   "destArrivalTimeHigh":"10:00:00"
 }
+----
+
+Response 1 trip with one tramsfer leaves origin at 6:46 arrives at midpoint at 6:56,
+the transfer train leaves at 8:09 and arrives the destination at 8:09
+----
+[
+    [
+        {
+            "arrivalTime": "06:46:00",
+            "departureTime": "06:46:00",
+            "stopName": "WOOD-RIDGE",
+            "stopSequence": 16,
+            "tripId": "2820"
+        },
+        {
+            "arrivalTime": "06:56:00",
+            "departureTime": "06:56:00",
+            "stopName": "FRANK R LAUTENBERG SECAUCUS LOWER LEVEL",
+            "stopSequence": 17,
+            "tripId": "2820"
+        }
+    ],
+    [
+        {
+            "arrivalTime": "08:09:00",
+            "departureTime": "08:09:00",
+            "stopName": "FRANK R LAUTENBERG SECAUCUS LOWER LEVEL",
+            "stopSequence": 2,
+            "tripId": "1249"
+        },
+        {
+            "arrivalTime": "08:17:00",
+            "departureTime": "08:17:00",
+            "stopName": "RUTHERFORD",
+            "stopSequence": 3,
+            "tripId": "1249"
+        }
+    ]
+]
+
+
 ----
 
 === Interact with the data using Cypher

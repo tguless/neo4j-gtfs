@@ -18,13 +18,13 @@ public interface TripPlanResultPjcn {
     public String getDepartureTime();
     public int getStopSequence();
 
-    //@Value("#{target.stops.iterator().next().getName()}")
-    //public String getStopName();
+    @Value("#{target.stops.iterator().next().getName()}")
+    public String getStopName();
 
-    public Set<StopNamePjcn> getStops();
+    //public Set<StopNamePjcn> getStops();
 
-    //@Value("#{target.trips.iterator().next().getTripId()}")
-    //public String getTripId();
+    @Value("#{target.trips.iterator().next().getTripId()}")
+    public String getTripId();
 
-    Set<TripNoBackrefsPjcn> getTrips();
+    //Set<TripNoBackrefsPjcn> getTrips();
 }
