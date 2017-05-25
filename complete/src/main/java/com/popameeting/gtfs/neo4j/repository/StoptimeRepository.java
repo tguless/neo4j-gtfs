@@ -10,6 +10,7 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -92,28 +93,38 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
                               @Param("destArrivalTimeHigh")String destArrivalTimeHigh,
                               Pageable pageRequest);
 
-    @Query("MATCH\n" +
-            "    p3=(orig:Stop {name:{origStation}})--(st_orig:Stoptime)-[r1:PART_OF_TRIP]->(trp1:Trip),\n" +
-            "    p4=(dest:Stop {name:{destStation}})--(st_dest:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip),\n" +
-            "    p1=((st_orig)-[:PRECEDES*]->(st_midway_arr:Stoptime)),\n"+
-            "    p5=(st_midway_arr)--(midway:Stop)--(st_midway_dep:Stoptime),\n" +
-            "    p2=((st_midway_dep)-[:PRECEDES*]->(st_dest))\n" +
+    @Query("//plan a specific indirect route\n" +
+            "MATCH\n" +
+            "    p3=(orig:Stop {name: {origStation}})<-[:LOCATED_AT]-(st_orig:Stoptime)-[r1:PART_OF_TRIP]->(trp1:Trip),\n" +
+            "    p4=(dest:Stop {name:{destStation}})<-[:LOCATED_AT]-(st_dest:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip),\n" +
+            "    p1=(st_orig)-[im1:PRECEDES*]->(st_midway_arr:Stoptime),\n"+
+            "    p5=(st_midway_arr)-[:LOCATED_AT]->(midway:Stop)<-[:LOCATED_AT]-(st_midway_dep:Stoptime),\n" +
+            "    p2=(st_midway_dep)-[im2:PRECEDES*]->(st_dest)\n" +
             "WHERE\n" +
-            "    st_orig.departure_time > {origArrivalTimeLow}\n" +
-            "    AND st_orig.departure_time < {origArrivalTimeHigh}\n" +
-            "    AND st_dest.arrival_time < {destArrivalTimeHigh}\n" +
-            "    AND st_dest.arrival_time > {destArrivalTimeLow}\n" +
-            "    AND st_midway_arr.arrival_time > st_orig.departure_time\n" +
-            "    AND st_midway_dep.departure_time > st_midway_arr.arrival_time\n" +
-            "    AND st_dest.arrival_time > st_midway_dep.departure_time\n" +
-            "    AND trp1.service_id = {serviceId}\n" +
-            "    AND trp2.service_id = {serviceId}\n" +
-            "RETURN\n" +
-            "    p3,p4, p5, p1,p2,midway\n" +
+            "  st_orig.departure_time > {origArrivalTimeLow}\n" +
+            "  AND st_orig.departure_time < {origArrivalTimeHigh}\n" +
+            "  AND st_dest.arrival_time < {destArrivalTimeHigh}\n" +
+            "  AND st_dest.arrival_time > {destArrivalTimeLow}\n" +
+            "  AND st_midway_arr.arrival_time > st_orig.departure_time\n"+
+            "  AND st_midway_dep.departure_time > st_midway_arr.arrival_time\n" +
+            "  AND st_dest.arrival_time > st_midway_dep.departure_time\n" +
+            "  AND trp1.service_id = {serviceId}\n" +
+            "  AND trp2.service_id = {serviceId}\n" +
+            "WITH\n"+
+            "  st_orig, st_dest, nodes(p1) + nodes(p2) AS allStops1\n" +
             "ORDER BY\n" +
             "    (st_dest.arrival_time_int-st_orig.departure_time_int) ASC\n" +
-            "SKIP {skip} LIMIT 1")
-    Page<Stoptime> getMyTripsOneStop(
+            "SKIP {skip} LIMIT 1\n" +
+            "UNWIND\n" +
+            "  allStops1 AS stoptime\n" +
+            "MATCH\n" +
+            "  p6=(loc:Stop)<-[r:LOCATED_AT]-(stoptime)-[r2:PART_OF_TRIP]->(trp5:Trip),\n" +
+            "  (stoptime)-[im1:PRECEDES*]->(stoptime2)\n" +
+            "RETURN\n" +
+            "  p6\n" +
+            "ORDER BY stoptime.departure_time_int ASC\n" +
+            ";")
+    List<Stoptime> getMyTripsOneStop(
                                         @Param("serviceId") String serviceId,
                                         @Param("origStation") String origStation,
                                         @Param("origArrivalTimeLow") String origArrivalTimeLow,

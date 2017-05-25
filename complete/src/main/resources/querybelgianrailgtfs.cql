@@ -162,29 +162,79 @@ RETURN
 LIMIT
     10;
 
-//plan a specific indirect route
+
+// plan a specific route with one stop
 MATCH
-    p3=(orig:Stop {name:"WESTWOOD"})--(st_orig:Stoptime)-[r1:PART_OF_TRIP]->(trp1:Trip),
-    p4=(dest:Stop {name:"RUTHERFORD"})--(st_dest:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip),
-    p1=((st_orig)-[:PRECEDES*]->(st_midway_arr:Stoptime)),
-    p5=(st_midway_arr)--(midway:Stop)--(st_midway_dep:Stoptime),
-    p2=((st_midway_dep)-[:PRECEDES*]->(st_dest))
+  (orig:Stop {name:"WESTWOOD"})--(st_orig:Stoptime),
+  (dest:Stop {name:"RUTHERFORD"})--(st_dest:Stoptime),
+  p1=(st_orig)-[:PRECEDES*]->(st_midway_arr:Stoptime),
+  (st_midway_arr)--(midway:Stop),
+  (midway)--(st_midway_dep:Stoptime),
+  p2=(st_midway_dep)-[:PRECEDES*]->(st_dest)
 WHERE
-    st_orig.departure_time > "07:30:00"
-    AND st_orig.departure_time < "09:00:00"
-    AND st_dest.arrival_time < "10:30:00"
-    AND st_dest.arrival_time > "09:00:00"
-    AND st_midway_arr.arrival_time > st_orig.departure_time
-    AND st_midway_dep.departure_time > st_midway_arr.arrival_time
-    AND st_dest.arrival_time > st_midway_dep.departure_time
-    AND trp1.service_id = "4"
-    AND trp2.service_id = "4"
+  st_orig.departure_time > "08:00:00"
+  AND st_orig.departure_time < "11:00:00"
+  AND st_midway_arr.arrival_time > st_orig.departure_time
+  AND st_midway_dep.departure_time > st_midway_arr.arrival_time
+  AND st_dest.arrival_time > st_midway_dep.departure_time
 RETURN
-    p3,p4, p5, p1,p2,midway
+  orig,st_orig, midway, st_midway_arr, st_midway_dep, dest, st_dest
+ORDER BY
+  (st_dest.arrival_time_int-st_orig.departure_time_int) ASC
+LIMIT 1;
+
+//plan a specific indirect route full details
+MATCH
+    p3=(orig:Stop {name:"WESTWOOD"})<-[:LOCATED_AT]-(st_orig:Stoptime)-[r1:PART_OF_TRIP]->(trp1:Trip),
+    p4=(dest:Stop {name:"RUTHERFORD"})<-[:LOCATED_AT]-(st_dest:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip),
+    p1=(st_orig)-[im1:PRECEDES*]->(st_midway_arr:Stoptime),
+    p5=(st_midway_arr)-[:LOCATED_AT]->(midway:Stop)<-[:LOCATED_AT]-(st_midway_dep:Stoptime),
+    p2=(st_midway_dep)-[im2:PRECEDES*]->(st_dest)
+WHERE
+  st_orig.departure_time > "07:30:00"
+  AND st_orig.departure_time < "09:00:00"
+  AND st_dest.arrival_time < "10:30:00"
+  AND st_dest.arrival_time > "09:00:00"
+  AND st_midway_arr.arrival_time > st_orig.departure_time
+  AND st_midway_dep.departure_time > st_midway_arr.arrival_time
+  AND st_dest.arrival_time > st_midway_dep.departure_time
+  AND trp1.service_id = "4"
+  AND trp2.service_id = "4"
+WITH
+  st_orig, st_dest, nodes(p1) + nodes(p2) AS allStops1
 ORDER BY
     (st_dest.arrival_time_int-st_orig.departure_time_int) ASC
-SKIP 0 LIMIT 1;
-
-
+SKIP 0 LIMIT 1
+UNWIND
+  allStops1 AS stoptime
+MATCH
+  p6=(loc:Stop)<-[r:LOCATED_AT]-(stoptime)-[r2:PART_OF_TRIP]->(trp5:Trip),
+  (stoptime)-[im1:PRECEDES*]->(stoptime2)
+RETURN
+  p6, im1
+ORDER BY stoptime.departure_time_int ASC
+;
 
 MATCH (n) WHERE ID(n) = 1266412 WITH n MATCH p=(n)-[*0..1]-(m) RETURN p;
+
+MATCH
+  p3=(orig:Stop {name:"WESTWOOD"})--(st_orig:Stoptime)-[r1:PART_OF_TRIP]->(trp1:Trip),
+  p4=(dest:Stop {name:"RUTHERFORD"})--(st_dest:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip),
+  p1=(st_orig)-[im1:PRECEDES*]->(st_midway_arr:Stoptime)-[r3:PART_OF_TRIP]->(trp3:Trip),
+  p5=(st_midway_arr)--(midway:Stop)--(st_midway_dep:Stoptime)-[r4:PART_OF_TRIP]->(trp4:Trip),
+  p2=(st_midway_dep)-[im2:PRECEDES*]->(st_dest)//,
+//(:nodes(p1)) -[:PART_OF_TRIP]-> (trp5:Trip)
+  WHERE
+  st_orig.departure_time > "07:30:00"
+  AND st_orig.departure_time < "09:00:00"
+  AND st_dest.arrival_time < "10:30:00"
+  AND st_dest.arrival_time > "09:00:00"
+  AND st_midway_arr.arrival_time > st_orig.departure_time
+  AND st_midway_dep.departure_time > st_midway_arr.arrival_time
+  AND st_dest.arrival_time > st_midway_dep.departure_time
+  AND trp1.service_id = "4"
+  AND trp2.service_id = "4"
+RETURN
+  st_orig, st_dest, nodes(p1) + nodes(p2) AS allStops1 // p2 + p1 // nodes(p1) + nodes(p2) AS allStops1
+ORDER BY
+  (st_dest.arrival_time_int-st_orig.departure_time_int) ASC

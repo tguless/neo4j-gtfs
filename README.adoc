@@ -226,32 +226,51 @@ trip options from one station to another given departure and arrival time criter
 curltests/planTrip.sh
 ----
 #!/usr/bin/env bash
-curl -H "Content-Type: application/json" -X POST --data @TripPlan1.json http://localhost:8080/customrest/plantrip
+curl -H "Content-Type: application/json" -X POST --data @TripPlan.json http://localhost:8080/customrest/planTrip | python -m json.tool
 ----
 //include::curltests/planTrip.sh[]
 
-
-curltests/TripPlan1.json
+curltests/TripPlan.json
 ----
 {
-               "serviceId":"4",
-               "origStation":"WESTWOOD",
-               "origArrivalTimeLow" :"06:30:00",
-               "origArrivalTimeHigh" :"07:10:00",
-               "destStation" :"HOBOKEN",
-               "destArrivalTimeLow":"06:30:00",
-               "destArrivalTimeHigh":"08:00:00"
+  "serviceId":"4",
+  "origStation":"WESTWOOD",
+  "origArrivalTimeLow" :"06:30:00",
+  "origArrivalTimeHigh" :"08:10:00",
+  "destStation" :"HOBOKEN",
+  "destArrivalTimeLow":"06:30:00",
+  "destArrivalTimeHigh":"10:00:00"
 }
 ----
 //include::curltests/TripPlan1.json[]
+
+curltests/planTripOneStop.sh
+----
+#!/usr/bin/env bash
+curl -H "Content-Type: application/json" -X POST --data @TripPlanOneStop.json http://localhost:8080/customrest/planTripOneStop | python -m json.tool
+----
+//include::curltests/planTrip.sh[]
+
+curltests/TripPlanOneStop.json
+----
+{
+  "serviceId":"4",
+  "origStation":"WESTWOOD",
+  "origArrivalTimeLow" :"06:30:00",
+  "origArrivalTimeHigh" :"07:10:00",
+  "destStation" :"RAMSEY",
+  "destArrivalTimeLow":"06:30:00",
+  "destArrivalTimeHigh":"10:00:00"
+}
+----
 
 === Interact with the data using Cypher
 
 Open your browser to Neo4j's own Cypher query tool by opening your browser to http://localhost:7474/ and start writing
 cypher queries like the ones below
 
+==== Find a DIRECT route with range conditions
 ----
-//find a DIRECT route with range conditions
 MATCH
   (orig:Stop {name: "WESTWOOD"})--(orig_st:Stoptime)-[r1:PART_OF_TRIP]->(trp:Trip)
 WHERE
@@ -287,29 +306,66 @@ ORDER BY stopSequence;
 image::route_and_stops_direct.png[route_and_stops]
 
 
+==== Plan an indirect route
 ----
-//plan a specific indirect route
+//find the route and the stops for the indirect route
 MATCH
-    (orig:Stop {name:"WESTWOOD"})--(st_orig:Stoptime),
-    (dest:Stop {name:"HOBOKEN"})--(st_dest:Stoptime),
-    p1=((st_orig)-[:PRECEDES*]->(st_midway_arr:Stoptime)),
-    (st_midway_arr)--(midway:Stop),
-    (midway)--(st_midway_dep:Stoptime),
-    p2=((st_midway_dep)-[:PRECEDES*]->(st_dest))
+    (t:Stop),(a:Stop)
 WHERE
-    st_orig.departure_time > "08:00:00"
-    AND st_orig.departure_time < "11:00:00"
-    AND st_midway_arr.arrival_time > st_orig.departure_time
-    AND st_midway_dep.departure_time > st_midway_arr.arrival_time
-    AND st_dest.arrival_time > st_midway_dep.departure_time
+    t.name = "WESTWOOD"
+AND
+    a.name="HOBOKEN"
+WITH
+    t,a
+MATCH
+    p = allshortestpaths((t)-[*]-(a))
+WHERE
+    NONE (x in relationships(p) where type(x)="OPERATES")
 RETURN
-    orig,st_orig,dest,st_dest,p1,p2,midway
-ORDER BY
-    (st_dest.arrival_time_int-st_orig.departure_time_int) ASC
-LIMIT 1;
+    p
+LIMIT
+    10;
 ----
 
 image::route_and_stops_indirect.png[route_and_stops]
+
+==== Plan a specific indirect route with all stop and trip information.
+----
+
+MATCH
+    p3=(orig:Stop {name:"WESTWOOD"})<-[:LOCATED_AT]-(st_orig:Stoptime)-[r1:PART_OF_TRIP]->(trp1:Trip),
+    p4=(dest:Stop {name:"RUTHERFORD"})<-[:LOCATED_AT]-(st_dest:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip),
+    p1=(st_orig)-[im1:PRECEDES*]->(st_midway_arr:Stoptime),
+    p5=(st_midway_arr)-[:LOCATED_AT]->(midway:Stop)<-[:LOCATED_AT]-(st_midway_dep:Stoptime),
+    p2=(st_midway_dep)-[im2:PRECEDES*]->(st_dest)
+WHERE
+  st_orig.departure_time > "07:30:00"
+  AND st_orig.departure_time < "09:00:00"
+  AND st_dest.arrival_time < "10:30:00"
+  AND st_dest.arrival_time > "09:00:00"
+  AND st_midway_arr.arrival_time > st_orig.departure_time
+  AND st_midway_dep.departure_time > st_midway_arr.arrival_time
+  AND st_dest.arrival_time > st_midway_dep.departure_time
+  AND trp1.service_id = "4"
+  AND trp2.service_id = "4"
+WITH
+  st_orig, st_dest, nodes(p1) + nodes(p2) AS allStops1
+ORDER BY
+    (st_dest.arrival_time_int-st_orig.departure_time_int) ASC
+SKIP 0 LIMIT 1
+UNWIND
+  allStops1 AS stoptime
+MATCH
+  p6=(loc:Stop)<-[r:LOCATED_AT]-(stoptime)-[r2:PART_OF_TRIP]->(trp5:Trip),
+  (stoptime)-[im1:PRECEDES*]->(stoptime2)
+RETURN
+  p6, im1
+ORDER BY stoptime.departure_time_int ASC
+;
+
+----
+
+image::route_and_stops_indirect_det.png[route_and_stops]
 
 === Create your own services
 

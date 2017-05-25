@@ -1,0 +1,9 @@
+{
+  "serviceId":"4",
+  "origStation":"WESTWOOD",
+  "origArrivalTimeLow" :"06:30:00",
+  "origArrivalTimeHigh" :"07:10:00",
+  "destStation" :"RAMSEY",
+  "destArrivalTimeLow":"06:30:00",
+  "destArrivalTimeHigh":"10:00:00"
+}
