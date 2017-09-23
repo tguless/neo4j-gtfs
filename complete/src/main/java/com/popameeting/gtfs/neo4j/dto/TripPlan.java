@@ -7,7 +7,7 @@ import org.springframework.data.domain.Sort;
  * Created by tgulesserian on 5/20/17.
  */
 public class TripPlan {
-    private String serviceId;
+    private String travelDate;
     private String origStation;
     private String origArrivalTimeLow;
     private String origArrivalTimeHigh;
@@ -15,12 +15,12 @@ public class TripPlan {
     private String destArrivalTimeLow;
     private String destArrivalTimeHigh;
 
-    public String getServiceId() {
-        return serviceId;
+    public String getTravelDate() {
+        return travelDate;
     }
 
-    public void setServiceId(String serviceId) {
-        this.serviceId = serviceId;
+    public void setTravelDate(String serviceId) {
+        this.travelDate = serviceId;
     }
 
     public String getOrigStation() {

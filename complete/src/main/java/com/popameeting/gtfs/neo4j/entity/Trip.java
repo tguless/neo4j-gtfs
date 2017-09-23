@@ -30,6 +30,8 @@ public class Trip {
     @Relationship(type = "PART_OF_TRIP", direction = Relationship.INCOMING)
     public Set<Stoptime> stoptimes;
 
+    @Relationship(type = "RUNS_DURING")
+    public Set<CalendarDate> calendarDates;
 
     public Long getId() {
         return id;
@@ -72,4 +74,11 @@ public class Trip {
         this.stoptimes = stoptimes;
     }
 
+    public Set<CalendarDate> getCalendarDates() {
+        return calendarDates;
+    }
+
+    public void setCalendarDates(Set<CalendarDate> calendarDates) {
+        this.calendarDates = calendarDates;
+    }
 }

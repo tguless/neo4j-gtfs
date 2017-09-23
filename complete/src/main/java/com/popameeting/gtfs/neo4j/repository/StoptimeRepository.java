@@ -50,22 +50,29 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
         With projection:
         http://localhost:8080/stoptimes/search/getMyTrips?serviceId=4&origStation=WESTWOOD&origArrivalTimeLow=06:30:00&origArrivalTimeHigh=07:10:00&destStation=HOBOKEN&destArrivalTimeLow=07:00:00&destArrivalTimeHigh=08:00:00&sort=departureTimeInt,asc&projection=TripPlanResult
     */
-    @Query("//find a DIRECT route with range conditions\n" +
+    @Query(
+            "MATCH\n" +
+            "  (cd:CalendarDate)\n" +
+            "WHERE \n" +
+            "   cd.date = {travelDate} AND\n" +
+            "   cd.exception_type = '1'\n" +
+            "WITH \n" +
+            "   cd\n" +
             "MATCH\n" +
             "  (orig:Stop {name: {origStation}})--(orig_st:Stoptime)-[r1:PART_OF_TRIP]->(trp:Trip)\n" +
             "WHERE\n"+
             "  orig_st.departure_time > {origArrivalTimeLow}\n" +
             "  AND orig_st.departure_time < {origArrivalTimeHigh}\n" +
-            "  AND trp.service_id={serviceId}\n" +
+            "  AND trp.service_id=cd.service_id\n" +
             "WITH\n"+
-            "  orig, orig_st\n" +
+            "  orig, orig_st, cd\n" +
             "MATCH\n" +
             "    (dest:Stop {name: {destStation}})--(dest_st:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip)\n" +
             "WHERE\n"+
             "    dest_st.arrival_time < {destArrivalTimeHigh}\n" +
             "    AND dest_st.arrival_time > {destArrivalTimeLow}\n" +
             "    AND dest_st.arrival_time > orig_st.departure_time\n"+
-            "    AND trp2.service_id={serviceId}\n" +
+            "    AND trp2.service_id=cd.service_id\n" +
             "WITH\n"+
             "    dest,dest_st,orig, orig_st\n" +
             "MATCH\n" +
@@ -83,17 +90,24 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
             "   stoptimes.departure_time_int AS departureTimeInt, \n" +
             "   trip.id AS tripId"
             )
-    Page<Stoptime> getMyTrips(
-                              @Param("serviceId") String serviceId,
+    <T> Page<T> getMyTrips(
+                              @Param("travelDate") String travelDate,
                               @Param("origStation") String origStation,
                               @Param("origArrivalTimeLow") String origArrivalTimeLow,
                               @Param("origArrivalTimeHigh") String origArrivalTimeHigh,
                               @Param("destStation") String destStation,
                               @Param("destArrivalTimeLow") String destArrivalTimeLow,
                               @Param("destArrivalTimeHigh")String destArrivalTimeHigh,
-                              Pageable pageRequest);
+                              Pageable pageRequest,
+                              Class<T> type);
 
-    @Query("//plan a specific indirect route\n" +
+    @Query(
+            "MATCH\n" +
+            "  (cd:CalendarDate)\n" +
+            "WHERE \n" +
+            "    cd.date = {travelDate} AND \n" +
+            "    cd.exception_type = '1'\n" +
+            "WITH cd\n" +
             "MATCH\n" +
             "    p3=(orig:Stop {name: {origStation}})<-[:LOCATED_AT]-(st_orig:Stoptime)-[r1:PART_OF_TRIP]->(trp1:Trip),\n" +
             "    p4=(dest:Stop {name:{destStation}})<-[:LOCATED_AT]-(st_dest:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip),\n" +
@@ -108,8 +122,8 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
             "  AND st_midway_arr.arrival_time > st_orig.departure_time\n"+
             "  AND st_midway_dep.departure_time > st_midway_arr.arrival_time\n" +
             "  AND st_dest.arrival_time > st_midway_dep.departure_time\n" +
-            "  AND trp1.service_id = {serviceId}\n" +
-            "  AND trp2.service_id = {serviceId}\n" +
+            "  AND trp1.service_id = cd.service_id\n" +
+            "  AND trp2.service_id = cd.service_id\n" +
             "WITH\n"+
             "  st_orig, st_dest, nodes(p1) + nodes(p2) AS allStops1\n" +
             "ORDER BY\n" +
@@ -124,39 +138,17 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
             "  p6\n" +
             "ORDER BY stoptime.departure_time_int ASC\n" +
             ";")
-    List<Stoptime> getMyTripsOneStop(
-                                        @Param("serviceId") String serviceId,
+    <T> List<T> getMyTripsOneStop(
+                                        @Param("travelDate") String travelDate,
                                         @Param("origStation") String origStation,
                                         @Param("origArrivalTimeLow") String origArrivalTimeLow,
                                         @Param("origArrivalTimeHigh") String origArrivalTimeHigh,
                                         @Param("destStation") String destStation,
                                         @Param("destArrivalTimeLow") String destArrivalTimeLow,
                                         @Param("destArrivalTimeHigh")String destArrivalTimeHigh,
-                                        @Param("skip")Long skip
+                                        @Param("skip")Long skip,
+                                        Class<T> type
                                     );
-
-    @Query("MATCH\n"+
-          "  (orig:Stop {name: 'WESTWOOD'})--(orig_st:Stoptime)-[r1:PART_OF_TRIP]->(trp:Trip)\n"+
-          "WHERE\n"+
-          "  orig_st.departure_time > '06:30:00'\n"+
-          "  AND orig_st.departure_time < '07:30:00'\n"+
-          "  AND trp.service_id='4'\n"+
-          "WITH\n"+
-          "  orig, orig_st\n"+
-          "MATCH\n"+
-          "  (dest:Stop {name:'HOBOKEN'})--(dest_st:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip)\n"+
-          "  WHERE\n"+
-          "  dest_st.arrival_time < '09:00:00'\n"+
-          "  AND dest_st.arrival_time > '07:00:00'\n"+
-          "  AND dest_st.arrival_time > orig_st.departure_time\n"+
-          "  AND trp2.service_id='4'\n"+
-          "WITH\n"+
-          "  dest,dest_st,orig, orig_st, trp2\n"+
-          "MATCH\n"+
-          "  p = allshortestpaths((orig_st)-[*]->(dest_st))\n"+
-          "RETURN\n"+
-          "  p")
-    Set<Stoptime> getMyStops();
 
     /* No Spring Expression Language Support for Neo4j yet
     https://spring.io/blog/2014/07/15/spel-support-in-spring-data-jpa-query-definitions

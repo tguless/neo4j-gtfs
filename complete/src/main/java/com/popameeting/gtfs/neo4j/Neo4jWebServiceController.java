@@ -36,6 +36,9 @@ public class Neo4jWebServiceController {
     StoptimeRepository stoptimeRepository;
 
     @Autowired
+    CalendarDateRepository calendarDateRepository;
+
+    @Autowired
     TripRepository tripRepository;
 
     @Autowired
@@ -99,52 +102,15 @@ public class Neo4jWebServiceController {
         return "done";
     }
 
-    /*
-    @RequestMapping(value = "/plantrip", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public Page<?> planTrip( @RequestBody TripPlan plan, Pageable pageable){
-
-        / * No Spring Expression Language (SpEL) support yet in for spring data Neo4j
-        https://spring.io/blog/2014/07/15/spel-support-in-spring-data-jpa-query-definitions
-
-        Page<?> test= stoptimeRepository.getMyTrips2(
-                plan,
-                pageable).
-                map(stoptime -> projectionFactory.createProjection(TripPlanResultPjcn.class, stoptime));
-        *  /
-
-        if(pageable.getSort() == null || !pageable.getSort().iterator().hasNext()) {
-            Sort sort = new Sort(Sort.Direction.ASC, "departureTimeInt");
-            pageable = new PageRequest(pageable.getPageNumber(), pageable.getPageSize(), sort);
-        }
-
-        Page<?> result= stoptimeRepository.getMyTrips(
-                plan.getServiceId(),
-                plan.getOrigStation(),
-                plan.getOrigArrivalTimeLow(),
-                plan.getOrigArrivalTimeHigh(),
-                plan.getDestStation(),
-                plan.getDestArrivalTimeLow(),
-                plan.getDestArrivalTimeHigh(),
-                pageable).//
-                map(stoptime -> projectionFactory.createProjection(TripPlanResultPjcn.class, stoptime));
-
-        return result;
-
-    }
-    */
-
-
-
     @RequestMapping(value = "/planTrip", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public Set <HashSet <LinkedHashSet<Stoptime>>>  planTrip( @RequestBody TripPlan plan){
+    public ArrayList <ArrayList <ArrayList<Stoptime>>>  planTrip( @RequestBody TripPlan plan){
 
         Sort sort = new Sort(Sort.Direction.ASC, "tripId").
                 and( new Sort(Sort.Direction.ASC, "departureTimeInt"));
         Pageable pageable = new PageRequest(0, 1000000, sort);
 
-        Set <HashSet <LinkedHashSet<Stoptime>>> tripPlanNoTransfer =  planTripNoTransfer(plan);
+        ArrayList <ArrayList <ArrayList<Stoptime>>> tripPlanNoTransfer =  planTripNoTransfer(plan);
         if (tripPlanNoTransfer.size() > 0) {
             return tripPlanNoTransfer;
         } else {
@@ -156,29 +122,30 @@ public class Neo4jWebServiceController {
 
     @RequestMapping(value = "/planTripNoTransfer", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public Set <HashSet <LinkedHashSet<Stoptime>>> planTripNoTransfer( @RequestBody TripPlan plan){
+    public ArrayList <ArrayList <ArrayList<Stoptime>>> planTripNoTransfer( @RequestBody TripPlan plan){
 
-        HashSet <HashSet <LinkedHashSet<Stoptime>>> allPlansWithLegs = new HashSet<>();
+        ArrayList <ArrayList <ArrayList<Stoptime>>> allPlansWithLegs = new ArrayList<>();
 
         Sort sort = new Sort(Sort.Direction.ASC, "tripId").
                 and( new Sort(Sort.Direction.ASC, "departureTimeInt"));
         Pageable pageable = new PageRequest(0, 1000000, sort);
 
         Page<Stoptime> imResult = stoptimeRepository.getMyTrips(
-                plan.getServiceId(),
+                plan.getTravelDate(),
                 plan.getOrigStation(),
                 plan.getOrigArrivalTimeLow(),
                 plan.getOrigArrivalTimeHigh(),
                 plan.getDestStation(),
                 plan.getDestArrivalTimeLow(),
                 plan.getDestArrivalTimeHigh(),
-                pageable);
+                pageable,
+                Stoptime.class);
 
-        HashSet <LinkedHashSet<Stoptime>> finalResult = breakupTrips( imResult);
+        ArrayList <ArrayList<Stoptime>> finalResult = breakupTrips( imResult);
 
         //Single leg trip
-        for (LinkedHashSet<Stoptime> leg : finalResult) {
-            HashSet <LinkedHashSet<Stoptime>> planWithLegs = new HashSet<>();
+        for (ArrayList<Stoptime> leg : finalResult) {
+            ArrayList <ArrayList<Stoptime>> planWithLegs = new ArrayList<>();
             planWithLegs.add(leg);
             allPlansWithLegs.add((planWithLegs));
         }
@@ -189,36 +156,45 @@ public class Neo4jWebServiceController {
 
     @RequestMapping(value = "/planTripOneTransfer", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public Set <HashSet <LinkedHashSet<Stoptime>>>  planTripOneTransfer( @RequestBody TripPlan plan){
+    public ArrayList <ArrayList <ArrayList<Stoptime>>>  planTripOneTransfer( @RequestBody TripPlan plan){
+        ArrayList<ArrayList<ArrayList<Stoptime>>> allPlansWithLegs = new ArrayList<>();
 
-        HashSet <HashSet <LinkedHashSet<Stoptime>>> allPlansWithLegs = new HashSet<>();
+        long curRec = 0L;
 
-        Sort sort = new Sort(Sort.Direction.ASC, "tripId").
-                and( new Sort(Sort.Direction.ASC, "departureTimeInt"));
-        Pageable pageable = new PageRequest(0, 1000000, sort);
+        while(true) {
 
-        List<Stoptime> imResult = stoptimeRepository.getMyTripsOneStop(
-                plan.getServiceId(),
-                plan.getOrigStation(),
-                plan.getOrigArrivalTimeLow(),
-                plan.getOrigArrivalTimeHigh(),
-                plan.getDestStation(),
-                plan.getDestArrivalTimeLow(),
-                plan.getDestArrivalTimeHigh(),
-                1L);
+            Sort sort = new Sort(Sort.Direction.ASC, "tripId").
+                    and(new Sort(Sort.Direction.ASC, "departureTimeInt"));
+            Pageable pageable = new PageRequest(0, 1000000, sort);
 
-        HashSet <LinkedHashSet<Stoptime>> allLegs = breakupTrips( imResult);
+            List<Stoptime> imResult = stoptimeRepository.getMyTripsOneStop(
+                    plan.getTravelDate(),
+                    plan.getOrigStation(),
+                    plan.getOrigArrivalTimeLow(),
+                    plan.getOrigArrivalTimeHigh(),
+                    plan.getDestStation(),
+                    plan.getDestArrivalTimeLow(),
+                    plan.getDestArrivalTimeHigh(),
+                    curRec,
+                    Stoptime.class);
 
-        //Multi leg single plan
-        HashSet <LinkedHashSet<Stoptime>> planWithLegs = new HashSet<>();
-        for (LinkedHashSet<Stoptime> leg : allLegs) {
-            planWithLegs.add(leg);
+            ArrayList<ArrayList<Stoptime>> allLegs = breakupTrips(imResult);
 
+            //Multi leg single plan
+            ArrayList<ArrayList<Stoptime>> planWithLegs = new ArrayList<>();
+            for (ArrayList<Stoptime> leg : allLegs) {
+                planWithLegs.add(leg);
+
+            }
+
+            if (planWithLegs != null && planWithLegs.size() > 0) {
+                allPlansWithLegs.add((planWithLegs));
+            } else {
+                return allPlansWithLegs;
+            }
+
+            curRec++;
         }
-
-        allPlansWithLegs.add((planWithLegs));
-
-        return allPlansWithLegs;
 
     }
 
@@ -235,22 +211,22 @@ public class Neo4jWebServiceController {
         return tripPlan;
     }
 
-    private  HashSet <LinkedHashSet<Stoptime>> breakupTrips(Page<Stoptime> test) {
+    private  ArrayList <ArrayList<Stoptime>> breakupTrips(Page<Stoptime> test) {
         return breakupTrips(test.getContent());
     }
 
-    private  HashSet <LinkedHashSet<Stoptime>> breakupTrips(List<Stoptime> test) {
-        HashSet <LinkedHashSet<Stoptime>> result = new HashSet<>();
+    private  ArrayList <ArrayList<Stoptime>> breakupTrips(List<Stoptime> test) {
+        ArrayList <ArrayList<Stoptime>> result = new ArrayList<>();
 
         String lastTripId = null;
-        LinkedHashSet currentSet = null;
+        ArrayList currentSet = null;
 
         for (Stoptime stoptime: test) {
 
             Trip currentTrip = stoptime.getTrips().iterator().next();
 
             if (lastTripId == null  || !lastTripId.equals(currentTrip.getTripId())) {
-                currentSet = new LinkedHashSet<Stoptime>();
+                currentSet = new ArrayList<Stoptime>();
                 result.add(currentSet);
                 lastTripId = currentTrip.getTripId();
             }
@@ -261,58 +237,6 @@ public class Neo4jWebServiceController {
         return result;
     }
 
-
-    @RequestMapping(value = "/test", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public Page<?> testTrip(Pageable pageable) {
-
-        if(pageable.getSort() == null || !pageable.getSort().iterator().hasNext()) {
-            Sort sort = new Sort(Sort.Direction.ASC, "tripId").
-                        and( new Sort(Sort.Direction.ASC, "departureTimeInt"));
-            pageable = new PageRequest(pageable.getPageNumber(), 500, sort);
-        }
-
-        Page<?> result= stoptimeRepository.getMyTrips(
-                "4",
-                "WESTWOOD",
-                "06:30:00",
-                "07:30:00",
-                "HOBOKEN",
-                "07:00:00",
-                "09:00:00",
-                pageable).//
-                map(stoptime -> projectionFactory.createProjection(TripPlanResultPjcn.class, stoptime));
-
-        return result;
-
-    }
-
-    @RequestMapping(value = "/test2", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public  Set<LinkedHashSet <Stoptime>>testTrip() {
-
-        Sort sort = new Sort(Sort.Direction.ASC, "tripId").
-                    and( new Sort(Sort.Direction.ASC, "departureTimeInt"));
-        Pageable pageable = new PageRequest(0, 1000000, sort);
-
-        Page<Stoptime> imResult= stoptimeRepository.getMyTrips(
-                "4",
-                "WESTWOOD",
-                "06:30:00",
-                "07:30:00",
-                "HOBOKEN",
-                "07:00:00",
-                "09:00:00",
-                pageable);
-
-        String lastTripId = null;
-        LinkedHashSet currentSet = null;
-
-        HashSet <LinkedHashSet<Stoptime>> result = breakupTrips( imResult);
-
-        return result;
-
-    }
 
     @RequestMapping(value = "/LoadPrefetched", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
@@ -325,10 +249,13 @@ public class Neo4jWebServiceController {
         stopRepository.deleteAll();
         stoptimeRepository.deleteAll();
         tripRepository.deleteAll();
+        calendarDateRepository.deleteAll();
 
         agencyRepository.loadNodes();
         routeRepository.loadNodes();
         tripRepository.loadNodes();
+
+        calendarDateRepository.loadNodes();
 
         stopRepository.addStops();
         stopRepository.connectParentChild();

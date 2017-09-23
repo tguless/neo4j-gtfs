@@ -4,6 +4,8 @@ create constraint on (a:Agency) assert a.id is unique;
 create constraint on (r:Route) assert r.id is unique;
 create constraint on (t:Trip) assert t.id is unique;
 create index on :Trip(service_id);
+create index on :CalendarDate(service_id);
+create index on :CalendarDate(date);
 create constraint on (s:Stop) assert s.id is unique;
 create index on :Stoptime(stop_sequence);
 create index on :Stop(name);
@@ -23,6 +25,12 @@ load csv with headers from
 'file:///nmbs/routes.txt' as csv
 match (a:Agency {id: csv.agency_id})
 create (a)-[:OPERATES]->(r:Route {id: csv.route_id, short_name: csv.route_short_name, long_name: csv.route_long_name, type: toInt(csv.route_type)});
+
+// add the calendar dates
+load csv with headers from
+'file:///nmbs/calendar_dates.txt' as csv
+match (t:Trip {service_id: csv.service_id})
+create (t)-[:RUNS_DURING]->(cd:CalendarDate{service_id: csv.service_id, date: csv.date, exception_type: csv.exception_type });
 
 // add the trips
 load csv with headers from

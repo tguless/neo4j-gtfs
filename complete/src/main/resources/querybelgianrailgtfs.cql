@@ -178,12 +178,16 @@ WHERE
   AND st_midway_dep.departure_time > st_midway_arr.arrival_time
   AND st_dest.arrival_time > st_midway_dep.departure_time
 RETURN
-  orig,st_orig, midway, st_midway_arr, st_midway_dep, dest, st_dest
+  p1, p2, orig,st_orig, midway, st_midway_arr, st_midway_dep, dest, st_dest
 ORDER BY
   (st_dest.arrival_time_int-st_orig.departure_time_int) ASC
-LIMIT 1;
+SKIP 1 LIMIT 1;
 
 //plan a specific indirect route full details
+MATCH
+  (cd:CalendarDate)
+WHERE cd.date = "20170526"
+WITH cd
 MATCH
     p3=(orig:Stop {name:"WESTWOOD"})<-[:LOCATED_AT]-(st_orig:Stoptime)-[r1:PART_OF_TRIP]->(trp1:Trip),
     p4=(dest:Stop {name:"RUTHERFORD"})<-[:LOCATED_AT]-(st_dest:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip),
@@ -193,18 +197,18 @@ MATCH
 WHERE
   st_orig.departure_time > "07:30:00"
   AND st_orig.departure_time < "09:00:00"
-  AND st_dest.arrival_time < "10:30:00"
   AND st_dest.arrival_time > "09:00:00"
+  AND st_dest.arrival_time < "10:30:00"
   AND st_midway_arr.arrival_time > st_orig.departure_time
   AND st_midway_dep.departure_time > st_midway_arr.arrival_time
   AND st_dest.arrival_time > st_midway_dep.departure_time
-  AND trp1.service_id = "4"
-  AND trp2.service_id = "4"
+  AND trp1.service_id = cd.service_id
+  AND trp2.service_id = cd.service_id
 WITH
   st_orig, st_dest, nodes(p1) + nodes(p2) AS allStops1
 ORDER BY
     (st_dest.arrival_time_int-st_orig.departure_time_int) ASC
-SKIP 0 LIMIT 1
+SKIP 1 LIMIT 1
 UNWIND
   allStops1 AS stoptime
 MATCH
@@ -238,3 +242,4 @@ RETURN
   st_orig, st_dest, nodes(p1) + nodes(p2) AS allStops1 // p2 + p1 // nodes(p1) + nodes(p2) AS allStops1
 ORDER BY
   (st_dest.arrival_time_int-st_orig.departure_time_int) ASC
+
