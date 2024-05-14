@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -190,6 +191,9 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
             @Param("tripPlan") TripPlan tripPlan,
             Pageable pageRequest);
     */
+
+    @Query("MATCH (s:Stoptime)-[*1..$depth]-(related) WHERE id(s) = $id RETURN s, collect(related)")
+    Optional<Stoptime> findByIdWithDepth(@Param("id") Long id, @Param("depth") int depth);
 
 }
 

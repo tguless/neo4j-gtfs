@@ -16,5 +16,8 @@ public interface RouteRepository extends Neo4jRepository<Route,Long>,Importable 
             "CREATE (a)-[:OPERATES]->(r:Route {id: csv.route_id, short_name: csv.route_short_name, long_name: csv.route_long_name, type: toInt(csv.route_type)});\n")
     void loadNodes ();
 
-    Route findByRouteId(@Param("routeId") String routeId, @Depth @Param("depth") int depth);
+    //Route findByRouteId(@Param("routeId") String routeId, @Depth @Param("depth") int depth);
+
+    @Query("MATCH (r:Route {id: $routeId})-[*1..$depth]-(related) RETURN r, collect(related)")
+    Route findByRouteIdWithDepth(@Param("routeId") String routeId, @Param("depth") int depth);
 }

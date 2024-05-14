@@ -53,14 +53,14 @@ public class Neo4jWebServiceController {
     @ResponseBody
     //Example id: NJT
     public Agency getAgency(@PathVariable String agencyId, Model model) {
-        return agencyRepository.findByAgencyId(agencyId,1);
+        return agencyRepository.findByAgencyIdWithDepth(agencyId,1);
     }
 
     @GetMapping(path = "/agency/{agencyId}/routes", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     @ResponseBody
     //Example id: NJT
     public Set<Route> getAgencyRoutes(@PathVariable String agencyId, Model model) {
-        Agency agency = agencyRepository.findByAgencyId(agencyId,1);
+        Agency agency = agencyRepository.findByAgencyIdWithDepth(agencyId,1);
         return agency.routes;
     }
 
@@ -68,29 +68,29 @@ public class Neo4jWebServiceController {
     @ResponseBody
     //Example id: 13
     public Route getRoute(@PathVariable String routeId, Model model) {
-        return routeRepository.findByRouteId(routeId,1);
+        return routeRepository.findByRouteIdWithDepth(routeId,1);
     }
 
     @GetMapping(path = "/stop/{stopName}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     @ResponseBody
     //Example name: WESTWOOD
     public Stop getStop(@PathVariable String stopName, Model model) {
-        return stopRepository.findByName(stopName,1);
+        return stopRepository.findByNameWithDepth(stopName,1);
     }
 
     @GetMapping(path = "/stoptime/{id}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     @ResponseBody
     //Example id: 1270015
     public Stoptime getStopTime(@PathVariable Long id, Model model) {
-        stoptimeRepository.findOne(id, 1);
-        return null;
+        return stoptimeRepository.findByIdWithDepth(id, 1).get();
+
     }
 
     @GetMapping(path = "/trip/{tripId}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     @ResponseBody
     //Example id: 22
     public Trip getTrip(@PathVariable String tripId, Model model) {
-        return tripRepository.findByTripId(tripId, 1);
+        return tripRepository.findByTripIdWithDepth(tripId, 1);
 
     }
 

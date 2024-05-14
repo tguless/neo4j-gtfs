@@ -5,8 +5,6 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.Set;
-
 /**
  * Created by tgulesserian on 5/18/17.
  */
@@ -27,6 +25,10 @@ public interface StopRepository extends Neo4jRepository<Stop, Long> {
             "CREATE (s:Stop {id: csv.stop_id, name: csv.stop_name, lat: toFloat(csv.stop_lat), lon: toFloat(csv.stop_lon), platform_code: csv.platform_code, parent_station: csv.parent_station, location_type: csv.location_type});\n")
     void addStops();
 
-    Stop findByName(@Param("stopName") String stopName,@Depth @Param("depth") int depth);
+    //Stop findByName(@Param("stopName") String stopName,@Depth @Param("depth") int depth);
+
+    @Query("MATCH (s:Stop {name: $stopName})-[*1..$depth]-(related) RETURN s, collect(related)")
+    Stop findByNameWithDepth(@Param("stopName") String stopName, @Param("depth") int depth);
+
 
 }

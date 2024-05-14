@@ -16,8 +16,9 @@ public interface AgencyRepository extends Neo4jRepository<Agency, Long>,Importab
             "CREATE (a:Agency {id: csv.agency_id, name: csv.agency_name, url: csv.agency_url, timezone: csv.agency_timezone});\n")
     void loadNodes ();
 
-    Agency findByAgencyId(@Param("agencyId") String agencyId, @Depth @Param("depth") int depth);
+    //Agency findByAgencyId(@Param("agencyId") String agencyId, @Depth @Param("depth") int depth);
 
-
+    @Query("MATCH (a:Agency {id: $agencyId})-[*1..$depth]-(related) RETURN a, collect(related)")
+    Agency findByAgencyIdWithDepth(@Param("agencyId") String agencyId, @Param("depth") int depth);
 
 }
