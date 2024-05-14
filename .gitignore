@@ -9,3 +9,5 @@ initial/.mvn
 .gradle
 out
 complete/build
+complete/gs-accessing-data-neo4j.iml
+complete/target/
