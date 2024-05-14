@@ -5,8 +5,8 @@ import com.popameeting.gtfs.neo4j.entity.Stoptime;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
+import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.ArrayList;
@@ -19,7 +19,7 @@ import java.util.Set;
 public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
 
 
-    @Query("//add the stoptimes\n" +
+    @Query("//add the stoptimes \n" +
             "LOAD CSV WITH HEADERS FROM\n" +
             "'file:///nmbs/stop_times.txt' AS csv\n" +
             "MATCH (t:Trip {id: csv.trip_id}), (s:Stop {id: csv.stop_id})\n" +

@@ -2,8 +2,8 @@ package com.popameeting.gtfs.neo4j.repository;
 
 import com.popameeting.gtfs.neo4j.entity.CalendarDate;
 import com.popameeting.gtfs.neo4j.entity.Stoptime;
-import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
+import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
 /**

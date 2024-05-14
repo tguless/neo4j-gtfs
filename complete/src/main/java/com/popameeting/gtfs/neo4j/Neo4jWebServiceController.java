@@ -82,7 +82,7 @@ public class Neo4jWebServiceController {
     @ResponseBody
     //Example id: 1270015
     public Stoptime getStopTime(@PathVariable Long id, Model model) {
-        stoptimeRepository.findOne(id,1);
+        stoptimeRepository.findOne(id, 1);
         return null;
     }
 
@@ -105,10 +105,18 @@ public class Neo4jWebServiceController {
     @RequestMapping(value = "/planTrip", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ArrayList <ArrayList <ArrayList<Stoptime>>>  planTrip( @RequestBody TripPlan plan){
-
+        /*
         Sort sort = new Sort(Sort.Direction.ASC, "tripId").
                 and( new Sort(Sort.Direction.ASC, "departureTimeInt"));
         Pageable pageable = new PageRequest(0, 1000000, sort);
+         */
+
+        Sort sort = Sort.by(
+                Sort.Order.asc("tripId"),
+                Sort.Order.asc("departureTimeInt")
+        );
+
+        Pageable pageable =  PageRequest.of(0, 1000000, sort);
 
         ArrayList <ArrayList <ArrayList<Stoptime>>> tripPlanNoTransfer =  planTripNoTransfer(plan);
         if (tripPlanNoTransfer.size() > 0) {
@@ -126,9 +134,25 @@ public class Neo4jWebServiceController {
 
         ArrayList <ArrayList <ArrayList<Stoptime>>> allPlansWithLegs = new ArrayList<>();
 
+        List<String> props1 = new ArrayList<>();
+        props1.add("tripId");
+
+        List<String> props2 = new ArrayList<>();
+        props2.add("departureTimeInt");
+
+        Sort sort = Sort.by(
+                Sort.Order.asc("tripId"),
+                Sort.Order.asc("departureTimeInt")
+        );
+
+        /*
         Sort sort = new Sort(Sort.Direction.ASC, "tripId").
                 and( new Sort(Sort.Direction.ASC, "departureTimeInt"));
-        Pageable pageable = new PageRequest(0, 1000000, sort);
+
+         */
+
+        //Pageable pageable =  PageRequest(0, 1000000, sort);
+        Pageable pageable =  PageRequest.of(0, 1000000, sort);
 
         Page<Stoptime> imResult = stoptimeRepository.getMyTrips(
                 plan.getTravelDate(),
@@ -162,10 +186,18 @@ public class Neo4jWebServiceController {
         long curRec = 0L;
 
         while(true) {
-
+            /*
             Sort sort = new Sort(Sort.Direction.ASC, "tripId").
                     and(new Sort(Sort.Direction.ASC, "departureTimeInt"));
             Pageable pageable = new PageRequest(0, 1000000, sort);
+            */
+
+            Sort sort = Sort.by(
+                    Sort.Order.asc("tripId"),
+                    Sort.Order.asc("departureTimeInt")
+            );
+
+            Pageable pageable =  PageRequest.of(0, 1000000, sort);
 
             List<Stoptime> imResult = stoptimeRepository.getMyTripsOneStop(
                     plan.getTravelDate(),

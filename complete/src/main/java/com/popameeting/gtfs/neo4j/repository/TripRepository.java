@@ -1,9 +1,8 @@
 package com.popameeting.gtfs.neo4j.repository;
 
 import com.popameeting.gtfs.neo4j.entity.Trip;
-import org.springframework.data.neo4j.annotation.Depth;
-import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
+import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.repository.query.Param;
 
 /**

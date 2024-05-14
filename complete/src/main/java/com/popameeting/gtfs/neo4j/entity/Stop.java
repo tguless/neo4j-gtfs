@@ -1,15 +1,16 @@
 package com.popameeting.gtfs.neo4j.entity;
 
-import org.neo4j.ogm.annotation.GraphId;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Property;
-
+import lombok.Data;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Property;
 /**
  * Created by tgulesserian on 5/18/17.
  */
-@NodeEntity
+@Node
+@Data
 public class Stop {
-    @GraphId
+    @Id
     private Long id;
 
     @Property(name="name")
@@ -24,43 +25,4 @@ public class Stop {
     @Property(name="id")
     private String stopId;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public double getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(double longitude) {
-        this.longitude = longitude;
-    }
-
-    public double getLatitude() {
-        return latitude;
-    }
-
-    public void setLatitude(double latitude) {
-        this.latitude = latitude;
-    }
-
-    public String getStopId() {
-        return stopId;
-    }
-
-    public void setStopId(String stopId) {
-        this.stopId = stopId;
-    }
 }

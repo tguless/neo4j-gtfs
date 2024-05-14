@@ -1,6 +1,7 @@
 rail_data.zip
 complete/.gradle
 complete/.mvn
+complete/targe/**/*
 initial/.gradle
 rail_data
 initial/.mvn

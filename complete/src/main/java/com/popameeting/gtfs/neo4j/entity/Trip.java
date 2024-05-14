@@ -1,21 +1,21 @@
 package com.popameeting.gtfs.neo4j.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import org.neo4j.ogm.annotation.GraphId;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Property;
-import org.neo4j.ogm.annotation.Relationship;
+import lombok.Data;
+import org.springframework.data.neo4j.core.schema.Property;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
 import java.util.Set;
 
 /**
  * Created by tgulesserian on 5/18/17.
  */
-@NodeEntity
+@Node
+@Data
 public class Trip {
 
-    @GraphId
+    @Id
     private Long id;
 
     @Property(name="id")
@@ -27,58 +27,10 @@ public class Trip {
     @Relationship(type = "USES")
     public Set<Route> routes;
 
-    @Relationship(type = "PART_OF_TRIP", direction = Relationship.INCOMING)
+    @Relationship(type = "PART_OF_TRIP", direction = Relationship.Direction.INCOMING)
     public Set<Stoptime> stoptimes;
 
     @Relationship(type = "RUNS_DURING")
     public Set<CalendarDate> calendarDates;
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getTripId() {
-        return tripId;
-    }
-
-    public void setTripId(String tripId) {
-        this.tripId = tripId;
-    }
-
-    public String getServiceId() {
-        return serviceId;
-    }
-
-    public void setServiceId(String serviceId) {
-        this.serviceId = serviceId;
-    }
-
-    public Set<Route> getRoutes() {
-        return routes;
-    }
-
-    public void setRoutes(Set<Route> routes) {
-        this.routes = routes;
-    }
-
-
-    public Set<Stoptime> getStoptimes() {
-        return stoptimes;
-    }
-
-    public void setStoptimes(Set<Stoptime> stoptimes) {
-        this.stoptimes = stoptimes;
-    }
-
-    public Set<CalendarDate> getCalendarDates() {
-        return calendarDates;
-    }
-
-    public void setCalendarDates(Set<CalendarDate> calendarDates) {
-        this.calendarDates = calendarDates;
-    }
 }
