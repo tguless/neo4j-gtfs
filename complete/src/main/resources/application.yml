@@ -1,0 +1,44 @@
+spring:
+  neo4j:
+    authentication:
+      username: neo4j
+      password: z000m123
+
+njgtfs:
+  login: zzzz
+  password: jjjj
+  filename: ./rail_data.zip
+  download:
+    link: https://www.njtransit.com/mt/mt_servlet.srv?hdnPageAction=MTDevResourceDownloadTo
+  urls:
+    post:
+      link: https://www.njtransit.com/mt/mt_servlet.srv?hdnPageAction=MTDevLoginSubmitTo
+    page:
+      link: https://www.njtransit.com/mt/mt_servlet.srv?hdnPageAction=MTDevLoginTo
+
+neo4j:
+  import:
+    path: ./neo4jdocker/import/nmbs/
+app:
+  debug: true
+  wait:
+    ms:
+      between:
+        login:
+          page:
+            and:
+              login: 5000
+          post:
+            and:
+              download: 5000
+---
+spring:
+  config:
+    activate:
+      on-profile: ai-rag-neo4j
+neo4j:
+  import:
+    path: ./neo4j-gtfs/complete/neo4jdocker/import/nmbs/
+njgtfs:
+  filename: ./neo4j-gtfs/complete/rail_data.zip
+

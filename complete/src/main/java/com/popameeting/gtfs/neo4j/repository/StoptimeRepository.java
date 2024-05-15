@@ -24,13 +24,13 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
             "LOAD CSV WITH HEADERS FROM\n" +
             "'file:///nmbs/stop_times.txt' AS csv\n" +
             "MATCH (t:Trip {id: csv.trip_id}), (s:Stop {id: csv.stop_id})\n" +
-            "CREATE (t)<-[:PART_OF_TRIP]-(st:Stoptime {arrival_time: csv.arrival_time, departure_time: csv.departure_time, stop_sequence: toInt(csv.stop_sequence)})-[:LOCATED_AT]->(s);\n")
+            "CREATE (t)<-[:PART_OF_TRIP]-(st:Stoptime {arrival_time: csv.arrival_time, departure_time: csv.departure_time, stop_sequence: toInteger(csv.stop_sequence)})-[:LOCATED_AT]->(s);\n")
     void addStopTimes();
 
     @Query( "//create integers out of the stoptimes (to allow for calculations/ordering)\n" +
             "MATCH (s:Stoptime)\n" +
-            "SET s.arrival_time_int=toInt(replace(s.arrival_time,':',''))/100\n" +
-            "SET s.departure_time_int=toInt(replace(s.departure_time,':',''))/100\n" +
+            "SET s.arrival_time_int=toInteger(replace(s.arrival_time,':',''))/100\n" +
+            "SET s.departure_time_int=toInteger(replace(s.departure_time,':',''))/100\n" +
             "; ")
     void stopTimeToInt();
 
@@ -55,23 +55,23 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
             value="MATCH\n" +
             "  (cd:CalendarDate)\n" +
             "WHERE \n" +
-            "   cd.date = {travelDate} AND\n" +
+            "   cd.date = $travelDate AND\n" +
             "   cd.exception_type = '1'\n" +
             "WITH \n" +
             "   cd\n" +
             "MATCH\n" +
-            "  (orig:Stop {name: {origStation}})--(orig_st:Stoptime)-[r1:PART_OF_TRIP]->(trp:Trip)\n" +
+            "  (orig:Stop {name: $origStation})--(orig_st:Stoptime)-[r1:PART_OF_TRIP]->(trp:Trip)\n" +
             "WHERE\n"+
-            "  orig_st.departure_time > {origArrivalTimeLow}\n" +
-            "  AND orig_st.departure_time < {origArrivalTimeHigh}\n" +
+            "  orig_st.departure_time > $origArrivalTimeLow\n" +
+            "  AND orig_st.departure_time < $origArrivalTimeHigh\n" +
             "  AND trp.service_id=cd.service_id\n" +
             "WITH\n"+
             "  orig, orig_st, cd\n" +
             "MATCH\n" +
-            "    (dest:Stop {name: {destStation}})--(dest_st:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip)\n" +
+            "    (dest:Stop {name: $destStation})--(dest_st:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip)\n" +
             "WHERE\n"+
-            "    dest_st.arrival_time < {destArrivalTimeHigh}\n" +
-            "    AND dest_st.arrival_time > {destArrivalTimeLow}\n" +
+            "    dest_st.arrival_time < $destArrivalTimeHigh\n" +
+            "    AND dest_st.arrival_time > $destArrivalTimeLow\n" +
             "    AND dest_st.arrival_time > orig_st.departure_time\n"+
             "    AND trp2.service_id=cd.service_id\n" +
             "WITH\n"+
@@ -97,23 +97,23 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
             "MATCH\n" +
             "  (cd:CalendarDate)\n" +
             "WHERE \n" +
-            "   cd.date = {travelDate} AND\n" +
+            "   cd.date = $travelDate AND\n" +
             "   cd.exception_type = '1'\n" +
             "WITH \n" +
             "   cd\n" +
             "MATCH\n" +
-            "  (orig:Stop {name: {origStation}})--(orig_st:Stoptime)-[r1:PART_OF_TRIP]->(trp:Trip)\n" +
+            "  (orig:Stop {name: $origStation})--(orig_st:Stoptime)-[r1:PART_OF_TRIP]->(trp:Trip)\n" +
             "WHERE\n"+
-            "  orig_st.departure_time > {origArrivalTimeLow}\n" +
-            "  AND orig_st.departure_time < {origArrivalTimeHigh}\n" +
+            "  orig_st.departure_time > $origArrivalTimeLow\n" +
+            "  AND orig_st.departure_time < $origArrivalTimeHigh\n" +
             "  AND trp.service_id=cd.service_id\n" +
             "WITH\n"+
             "  orig, orig_st, cd\n" +
             "MATCH\n" +
-            "    (dest:Stop {name: {destStation}})--(dest_st:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip)\n" +
+            "    (dest:Stop {name: $destStation})--(dest_st:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip)\n" +
             "WHERE\n"+
-            "    dest_st.arrival_time < {destArrivalTimeHigh}\n" +
-            "    AND dest_st.arrival_time > {destArrivalTimeLow}\n" +
+            "    dest_st.arrival_time < $destArrivalTimeHigh\n" +
+            "    AND dest_st.arrival_time > $destArrivalTimeLow\n" +
             "    AND dest_st.arrival_time > orig_st.departure_time\n"+
             "    AND trp2.service_id=cd.service_id\n" +
             "WITH\n"+
@@ -147,20 +147,20 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
             "MATCH\n" +
             "  (cd:CalendarDate)\n" +
             "WHERE \n" +
-            "    cd.date = {travelDate} AND \n" +
+            "    cd.date = $travelDate AND \n" +
             "    cd.exception_type = '1'\n" +
             "WITH cd\n" +
             "MATCH\n" +
-            "    p3=(orig:Stop {name: {origStation}})<-[:LOCATED_AT]-(st_orig:Stoptime)-[r1:PART_OF_TRIP]->(trp1:Trip),\n" +
-            "    p4=(dest:Stop {name:{destStation}})<-[:LOCATED_AT]-(st_dest:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip),\n" +
+            "    p3=(orig:Stop {name: $origStation})<-[:LOCATED_AT]-(st_orig:Stoptime)-[r1:PART_OF_TRIP]->(trp1:Trip),\n" +
+            "    p4=(dest:Stop {name:$destStation})<-[:LOCATED_AT]-(st_dest:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip),\n" +
             "    p1=(st_orig)-[im1:PRECEDES*]->(st_midway_arr:Stoptime),\n"+
             "    p5=(st_midway_arr)-[:LOCATED_AT]->(midway:Stop)<-[:LOCATED_AT]-(st_midway_dep:Stoptime),\n" +
             "    p2=(st_midway_dep)-[im2:PRECEDES*]->(st_dest)\n" +
             "WHERE\n" +
-            "  st_orig.departure_time > {origArrivalTimeLow}\n" +
-            "  AND st_orig.departure_time < {origArrivalTimeHigh}\n" +
-            "  AND st_dest.arrival_time < {destArrivalTimeHigh}\n" +
-            "  AND st_dest.arrival_time > {destArrivalTimeLow}\n" +
+            "  st_orig.departure_time > $origArrivalTimeLow\n" +
+            "  AND st_orig.departure_time < $origArrivalTimeHigh\n" +
+            "  AND st_dest.arrival_time < $destArrivalTimeHigh\n" +
+            "  AND st_dest.arrival_time > $destArrivalTimeLow\n" +
             "  AND st_midway_arr.arrival_time > st_orig.departure_time\n"+
             "  AND st_midway_dep.departure_time > st_midway_arr.arrival_time\n" +
             "  AND st_dest.arrival_time > st_midway_dep.departure_time\n" +
@@ -170,7 +170,7 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
             "  st_orig, st_dest, nodes(p1) + nodes(p2) AS allStops1\n" +
             "ORDER BY\n" +
             "    (st_dest.arrival_time_int-st_orig.departure_time_int) ASC\n" +
-            "SKIP {skip} LIMIT 1\n" +
+            "SKIP $skip LIMIT 1\n" +
             "UNWIND\n" +
             "  allStops1 AS stoptime\n" +
             "MATCH\n" +

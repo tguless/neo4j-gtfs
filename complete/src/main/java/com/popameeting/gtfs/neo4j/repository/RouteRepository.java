@@ -13,7 +13,7 @@ public interface RouteRepository extends Neo4jRepository<Route,String>,Importabl
             "LOAD CSV WITH HEADERS FROM\n" +
             "'file:///nmbs/routes.txt' AS csv\n" +
             "MATCH (a:Agency {id: csv.agency_id})\n" +
-            "CREATE (a)-[:OPERATES]->(r:Route {id: csv.route_id, short_name: csv.route_short_name, long_name: csv.route_long_name, type: toInt(csv.route_type)});\n")
+            "CREATE (a)-[:OPERATES]->(r:Route {id: csv.route_id, short_name: csv.route_short_name, long_name: csv.route_long_name, type: toInteger(csv.route_type)});\n")
     void loadNodes ();
 
     //Route findByRouteId(@Param("routeId") String routeId, @Depth @Param("depth") int depth);

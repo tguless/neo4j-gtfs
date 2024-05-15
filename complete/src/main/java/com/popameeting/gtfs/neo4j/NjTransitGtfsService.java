@@ -52,9 +52,9 @@ public class NjTransitGtfsService {
 
     @Value("${njgtfs.download.link}")
     String downloadLink;
-    @Value("${njgtfs.login.post.link}")
+    @Value("${njgtfs.urls.post.link}")
     String loginPostLink;
-    @Value("${njgtfs.login.page.link}")
+    @Value("${njgtfs.urls.page.link}")
     String loginPageLink;
 
     private final static Logger log = LoggerFactory.getLogger(NjTransitGtfsService.class);
@@ -169,10 +169,10 @@ public class NjTransitGtfsService {
             zis.closeEntry();
             zis.close();
         } catch (FileNotFoundException e) {
-            log.debug("Could not create zip file to unzip", e);
+            log.error("Could not create zip file to unzip", e);
             return false;
         } catch (IOException e) {
-            log.debug("There was a problem unzipping the " + newFile + " file to disk", e);
+            log.error("There was a problem unzipping the " + newFile + " file to disk", e);
             return false;
         }
 

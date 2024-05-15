@@ -24,7 +24,7 @@ create (a:Agency {id: csv.agency_id, name: csv.agency_name, url: csv.agency_url,
 load csv with headers from
 'file:///nmbs/routes.txt' as csv
 match (a:Agency {id: csv.agency_id})
-create (a)-[:OPERATES]->(r:Route {id: csv.route_id, short_name: csv.route_short_name, long_name: csv.route_long_name, type: toInt(csv.route_type)});
+create (a)-[:OPERATES]->(r:Route {id: csv.route_id, short_name: csv.route_short_name, long_name: csv.route_long_name, type: toInteger(csv.route_type)});
 
 // add the calendar dates
 load csv with headers from
@@ -55,12 +55,12 @@ create (ps)<-[:PART_OF]-(s);
 load csv with headers from
 'file:///nmbs/stop_times.txt' as csv
 match (t:Trip {id: csv.trip_id}), (s:Stop {id: csv.stop_id})
-create (t)<-[:PART_OF_TRIP]-(st:Stoptime {arrival_time: csv.arrival_time, departure_time: csv.departure_time, stop_sequence: toInt(csv.stop_sequence)})-[:LOCATED_AT]->(s);
+create (t)<-[:PART_OF_TRIP]-(st:Stoptime {arrival_time: csv.arrival_time, departure_time: csv.departure_time, stop_sequence: toInteger(csv.stop_sequence)})-[:LOCATED_AT]->(s);
 
 //create integers out of the stoptimes (to allow for calculations/ordering)
 match (s:Stoptime)
-set s.arrival_time_int=toInt(replace(s.arrival_time,":",""))/100
-set s.departure_time_int=toInt(replace(s.departure_time,":",""))/100
+set s.arrival_time_int=toInteger(replace(s.arrival_time,":",""))/100
+set s.departure_time_int=toInteger(replace(s.departure_time,":",""))/100
 ;
 
 //connect the stoptime sequences

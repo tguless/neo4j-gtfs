@@ -1,4 +1,4 @@
-rail_data.zip
+complete/rail_data.zip
 complete/.gradle
 complete/.mvn
 initial/.gradle
@@ -12,3 +12,4 @@ complete/gs-accessing-data-neo4j.iml
 complete/target/
 complete/neo4jdocker/data/**/*
 complete/neo4jdocker/logs/**/*
+complete/neo4jdocker/import/

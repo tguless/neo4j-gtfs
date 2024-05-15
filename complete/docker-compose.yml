@@ -13,8 +13,8 @@ services:
     volumes:
       - ./neo4jdocker/data:/data
       - ./neo4jdocker/logs:/logs
-      - ./neo4jdocker/:/import
-      - ./neo4jdocker/:/plugins
+      - ./neo4jdocker/import:/import
+      - ./neo4jdocker/plugins:/plugins
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:7474"]
       interval: 30s
