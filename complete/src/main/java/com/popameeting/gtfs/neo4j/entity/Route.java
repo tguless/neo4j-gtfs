@@ -15,8 +15,8 @@ import java.util.Set;
 @Node
 @Data
 public class Route {
-    @Id
-    private Long id;
+    //@Id
+    //private Long id;
 
     @Property(name="short_name")
     private String shortName;
@@ -24,6 +24,7 @@ public class Route {
     @Property(name="long_name")
     private String longName;
 
+    @Id
     @Property(name="id")
     private String routeId;
 

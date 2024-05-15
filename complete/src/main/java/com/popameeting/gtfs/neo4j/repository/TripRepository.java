@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 /**
  * Created by tgulesserian on 5/18/17.
  */
-public interface TripRepository extends Neo4jRepository<Trip, Long>,Importable {
+public interface TripRepository extends Neo4jRepository<Trip, String>,Importable {
     @Query("// add the trips\n" +
             "LOAD CSV WITH HEADERS FROM\n" +
             "'file:///nmbs/trips.txt' AS csv\n" +

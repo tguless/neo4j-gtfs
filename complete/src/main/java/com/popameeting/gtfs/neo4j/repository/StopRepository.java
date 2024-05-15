@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 /**
  * Created by tgulesserian on 5/18/17.
  */
-public interface StopRepository extends Neo4jRepository<Stop, Long> {
+public interface StopRepository extends Neo4jRepository<Stop, String> {
     @Query(
             "//connect parent/child relationships to stops\n" +
             "load csv with headers from\n" +

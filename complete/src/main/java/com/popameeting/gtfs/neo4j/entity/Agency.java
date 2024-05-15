@@ -15,9 +15,10 @@ import java.util.Set;
 @Node
 @Data
 public class Agency {
-    @Id
-    private Long id;
+    //@Id
+    //private Long id;
 
+    @Id
     @Property(name="id")
     private String agencyId;
 

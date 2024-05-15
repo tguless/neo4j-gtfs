@@ -15,9 +15,10 @@ import java.util.Set;
 @Data
 public class Trip {
 
-    @Id
-    private Long id;
+    //@Id
+    //private Long id;
 
+    @Id
     @Property(name="id")
     private String tripId;
 

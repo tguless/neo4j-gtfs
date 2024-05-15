@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 /**
  * Created by tgulesserian on 5/18/17.
  */
-public interface RouteRepository extends Neo4jRepository<Route,Long>,Importable {
+public interface RouteRepository extends Neo4jRepository<Route,String>,Importable {
     @Query("// add the routes\n" +
             "LOAD CSV WITH HEADERS FROM\n" +
             "'file:///nmbs/routes.txt' AS csv\n" +

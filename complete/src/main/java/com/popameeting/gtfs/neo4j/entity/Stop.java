@@ -10,8 +10,8 @@ import org.springframework.data.neo4j.core.schema.Property;
 @Node
 @Data
 public class Stop {
-    @Id
-    private Long id;
+    //@Id
+    //private Long id;
 
     @Property(name="name")
     private String name;
@@ -22,6 +22,7 @@ public class Stop {
     @Property(name="lat")
     private double latitude;
 
+    @Id
     @Property(name="id")
     private String stopId;
 

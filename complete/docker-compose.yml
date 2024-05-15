@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  neo4j:
+    image: neo4j:4.2.0
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      - NEO4J_AUTH=neo4j/z000m123
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+      - NEO4J_dbms_security_procedures_whitelist=apoc.*
+    volumes:
+      - ./neo4jdocker/data:/data
+      - ./neo4jdocker/logs:/logs
+      - ./neo4jdocker/:/import
+      - ./neo4jdocker/:/plugins
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7474"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+  neo4j-gtfs-java:
+    #image: sheepkiller/kafka-manager:latest
+    build:
+      context: ./
+      dockerfile: Dockerfile
+
