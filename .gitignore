@@ -10,4 +10,5 @@ out
 complete/build
 complete/gs-accessing-data-neo4j.iml
 complete/target/
-complete/neoj4docker/data/
+complete/neoj4docker/data/**/*
+complete/neoj4docker/logs/**/*
