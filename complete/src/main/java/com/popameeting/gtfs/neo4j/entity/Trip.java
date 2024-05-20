@@ -1,6 +1,7 @@
 package com.popameeting.gtfs.neo4j.entity;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.springframework.data.neo4j.core.schema.Property;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
@@ -13,6 +14,7 @@ import java.util.Set;
  */
 @Node
 @Data
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Trip {
 
     //@Id
@@ -20,6 +22,7 @@ public class Trip {
 
     @Id
     @Property(name="id")
+    @EqualsAndHashCode.Include
     private String tripId;
 
     @Property(name="service_id")

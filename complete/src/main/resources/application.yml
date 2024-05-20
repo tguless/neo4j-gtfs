@@ -31,6 +31,10 @@ app:
           post:
             and:
               download: 5000
+logging:
+  level:
+    org.springframework.data.neo4j: DEBUG
+
 ---
 spring:
   config:

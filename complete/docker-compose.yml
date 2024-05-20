@@ -10,6 +10,11 @@ services:
       - NEO4J_AUTH=neo4j/z000m123
       - NEO4J_dbms_security_procedures_unrestricted=apoc.*
       - NEO4J_dbms_security_procedures_whitelist=apoc.*
+      #- NEO4J_dbms_logs_query_enabled=true  # Enable query logging
+      #- NEO4J_dbms_logs_query_threshold=0   # Log all queries regardless of duration; set higher to log slower queries only
+      #- NEO4J_dbms_logs_query_allocation_logging_enabled=true # Log memory allocation and deallocation in queries
+      #- NEO4J_dbms_logs_query_time_logging_enabled=true # Log query execution times
+      #- NEO4J_dbms_logs_debug_level=DEBUG   # Set log level to DEBUG (note this can be very verbose)
     volumes:
       - ./neo4jdocker/data:/data
       - ./neo4jdocker/logs:/logs
