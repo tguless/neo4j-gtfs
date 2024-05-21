@@ -30,4 +30,6 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
+    environment:
+      - APP_ENVIRONMENT=ai-rag-neo4j
 

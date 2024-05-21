@@ -61,18 +61,20 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
                     WITH 
                        cd
                     MATCH
-                      (orig:Stop {name: $origStation})--(orig_st:Stoptime)-[r1:PART_OF_TRIP]->(trp:Trip)
+                      (orig:Stop)--(orig_st:Stoptime)-[r1:PART_OF_TRIP]->(trp:Trip)
                     WHERE
-                      orig_st.departure_time > $origArrivalTimeLow AND
-                      orig_st.departure_time < $origArrivalTimeHigh AND
+                      orig.name = toUpper($origStation) AND
+                      (orig_st.departure_time > $origArrivalTimeLow or  $origArrivalTimeLow IS NULL or $origArrivalTimeLow ='') AND
+                      (orig_st.departure_time < $origArrivalTimeHigh or $origArrivalTimeHigh IS NULL or $origArrivalTimeHigh = '') AND
                       trp.service_id=cd.service_id
                     WITH    
                       orig, orig_st, cd
                     MATCH
-                        (dest:Stop {name: $destStation})--(dest_st:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip)
+                        (dest:Stop)--(dest_st:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip)
                     WHERE
-                        dest_st.arrival_time < $destArrivalTimeHigh AND
-                        dest_st.arrival_time > $destArrivalTimeLow AND
+                        dest.name = toUpper($destStation) AND
+                        (dest_st.arrival_time < $destArrivalTimeHigh or $destArrivalTimeHigh IS NULL or $destArrivalTimeHigh = '') AND
+                        (dest_st.arrival_time > $destArrivalTimeLow or $destArrivalTimeLow IS NULL or $destArrivalTimeLow = '') AND
                         dest_st.arrival_time > orig_st.departure_time AND
                         trp2.service_id=cd.service_id
                     WITH
@@ -88,7 +90,7 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
                     MATCH
                         p=(stoptimes)-[r:LOCATED_AT]->(stop)
                     RETURN
-                        stoptimes, trip, stop, r, r2, p, p2,
+                        distinct stoptimes, trip, stop, r, r2, p, p2,
                         stoptimes.departure_time_int AS departureTimeInt, 
                         trip.id AS tripId
             """,
@@ -104,16 +106,16 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
                     MATCH
                       (orig:Stop {name: $origStation})--(orig_st:Stoptime)-[r1:PART_OF_TRIP]->(trp:Trip)
                     WHERE
-                      orig_st.departure_time > $origArrivalTimeLow AND
-                      orig_st.departure_time < $origArrivalTimeHigh AND
+                      (orig_st.departure_time > $origArrivalTimeLow or  $origArrivalTimeLow IS NULL or $origArrivalTimeLow ='') AND
+                      (orig_st.departure_time < $origArrivalTimeHigh or $origArrivalTimeHigh IS NULL or $origArrivalTimeHigh = '') AND
                       trp.service_id=cd.service_id
                     WITH
                       orig, orig_st, cd
                     MATCH
                         (dest:Stop {name: $destStation})--(dest_st:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip)
                     WHERE
-                        dest_st.arrival_time < $destArrivalTimeHigh AND
-                        dest_st.arrival_time > $destArrivalTimeLow AND
+                        (dest_st.arrival_time < $destArrivalTimeHigh or $destArrivalTimeHigh IS NULL or $destArrivalTimeHigh = '') AND
+                        (dest_st.arrival_time > $destArrivalTimeLow or $destArrivalTimeLow IS NULL or $destArrivalTimeLow = '') AND
                         dest_st.arrival_time > orig_st.departure_time AND
                         trp2.service_id=cd.service_id
                     WITH
